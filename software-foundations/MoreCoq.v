@@ -728,10 +728,8 @@ Proof. intros n X l. generalize dependent n.  generalize dependent l. induction 
 Theorem length_snoc''' : forall (n : nat) (X : Type) 
                               (v : X) (l : list X),
      length l = n ->
-     length (snoc l v) = S n.. 
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+     length (snoc l v) = S n.
+Proof. intros n X v l. generalize dependent n. generalize dependent l. induction l as [|h t]. simpl. intros n. intros H. rewrite H. reflexivity. intros m. simpl. intros H. destruct m. inversion H. inversion H. rewrite H1. apply IHt in H1. rewrite H1. reflexivity. Qed.
 
 (** **** Exercise: 3 stars, optional (app_length_cons)  *)
 (** Prove this by induction on [l1], without using [app_length]
@@ -741,9 +739,7 @@ Theorem app_length_cons : forall (X : Type) (l1 l2 : list X)
                                   (x : X) (n : nat),
      length (l1 ++ (x :: l2)) = n ->
      S (length (l1 ++ l2)) = n.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. Admitted. 
 
 (** **** Exercise: 4 stars, optional (app_length_twice)  *)
 (** Prove this by induction on [l], without using app_length. *)
@@ -765,8 +761,7 @@ Theorem double_induction: forall (P : nat -> nat -> Prop),
   (forall n, P 0 n -> P 0 (S n)) ->
   (forall m n, P m n -> P (S m) (S n)) ->
   forall m n, P m n.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. induction m as [|a]. induction n as [|b]. trivial. apply H1. apply IHb. induction n as [|b]. apply H0. apply IHa. Admitted.
 (** [] *)
 
 
