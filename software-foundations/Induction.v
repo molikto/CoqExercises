@@ -42,7 +42,7 @@ Qed.
 (** i have no idea it works with destruct **)
 
 Theorem plus_0_r: forall n : nat, n + 0 = n.
-Proof. intros n. induction n as [|n']. reflexivity. simpl. rewrite -> IHn'. reflexivity.
+Proof. intros n. induction n as [|n']. reflexivity. simpl. rewrite -> IHn'. reflexivity. Qed.
 
 Theorem mult_0_r: forall n: nat, n * 0 = 0.
 Proof. intros n. induction n as [| n']. 
@@ -52,7 +52,7 @@ Theorem plus_n_Sm: forall n m: nat, S (n + m) = n + (S m).
 Proof.  induction n as [|k]. induction m as [|k]. simpl. reflexivity. simpl. reflexivity. simpl. intros m. rewrite IHk. reflexivity. Qed.
 
 Theorem plus_comm: forall n m: nat, m + n = n + m.
-Proof. intros n. induction m as [|k]. rewrite <- plus_n_O. simpl. reflexivity. simpl. rewrite IHk. rewrite plus_n_Sm. reflexivity. Qed.
+Proof. intros n. induction m as [|k]. rewrite <- plus_n_O. simpl. rewrite plus_n_O. rewrite plus_n_O. reflexivity. simpl. rewrite IHk. rewrite plus_n_Sm. reflexivity. Qed.
 
 Theorem plus_assoc: forall n m p: nat, n + (m + p) = (n + m) + p.
 Proof. induction n as [|k]. simpl. reflexivity.  simpl. intros m p. rewrite IHk. reflexivity. Qed.
@@ -71,7 +71,6 @@ Theorem plus_swap: forall n m p: nat,
 n + (m + p) = m + (n + p).
 Proof. intros n m p. rewrite plus_assoc. rewrite plus_assoc. assert (n + m = m + n). rewrite plus_comm. reflexivity. rewrite H. reflexivity. Qed.
 
-Check mult.
 
 Theorem mult_lemma: forall m n: nat, m * S n = m * n + m.
 Proof. induction m as [|k]. reflexivity. simpl. intros n. rewrite IHk. simpl. rewrite <- plus_Sn_m. rewrite plus_swap. assert (k * n + n = n + k * n). rewrite plus_comm. reflexivity. rewrite <- H.   assert (S n + k = n + S k).  assert (n + S k = S k + n). rewrite plus_comm. reflexivity. rewrite H0. simpl. rewrite plus_comm. reflexivity. rewrite H0. rewrite plus_assoc. reflexivity.

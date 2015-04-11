@@ -1,0 +1,8 @@
+*.vo
+*.glob
+*.cmx
+*.cmxs
+*.cmi
+*.*.aux
+*.aux
+*.o
