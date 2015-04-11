@@ -1,10 +1,6 @@
 Require Export Induction.
 
 
-Definition mynil := @nil nat.
-
-Check @nil.
-
 Notation "x :: y" := (cons x y) (at level 60, right associativity).
 
 Notation "[ ]" := nil.
@@ -121,4 +117,4 @@ Proof. reflexivity. Qed.
 Example exp_3 : exp three zero = one.
 Proof. reflexivity. Qed.
 
-
+End Church.

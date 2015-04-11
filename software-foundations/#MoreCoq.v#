@@ -728,10 +728,8 @@ Proof. intros n X l. generalize dependent n.  generalize dependent l. induction 
 Theorem length_snoc''' : forall (n : nat) (X : Type) 
                               (v : X) (l : list X),
      length l = n ->
-     length (snoc l v) = S n.. 
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+     length (snoc l v) = S n.
+Proof. intros n X v l. generalize dependent n. generalize dependent l. induction l as [|h t]. simpl. 
 
 (** **** Exercise: 3 stars, optional (app_length_cons)  *)
 (** Prove this by induction on [l1], without using [app_length]
