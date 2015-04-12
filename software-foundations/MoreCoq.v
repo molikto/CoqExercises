@@ -90,48 +90,12 @@ Proof. intros n. apply n. Qed.
     will not work if the left and right sides of the equality are
     swapped. *)
 
-Theorem silly3_firsttry : forall (n : nat),
-     true = beq_nat n 5  ->
-     beq_nat (S (S n)) 7 = true.
-Proof.
-  intros n H.
-  simpl.
-  (* Here we cannot use [apply] directly *)
-Abort.
 
-(** In this case we can use the [symmetry] tactic, which switches the
-    left and right sides of an equality in the goal. *)
-
-Theorem silly3 : forall (n : nat),
-     true = beq_nat n 5  ->
-     beq_nat (S (S n)) 7 = true.
-Proof.
-  intros n H.
-  symmetry.
-  simpl. (* Actually, this [simpl] is unnecessary, since 
-            [apply] will perform simplification first. *)
-  apply H.  Qed.         
 
 (** **** Exercise: 3 stars (apply_exercise1)  *)
 (** Hint: you can use [apply] with previously defined lemmas, not
     just hypotheses in the context.  Remember that [SearchAbout] is
     your friend. *)
-
-Theorem rev_exercise1 : forall (l l' : list nat),
-     l = rev l' ->
-     l' = rev l.
-Proof.
-intros l l'. intros H. assert (rev l = l'). rewrite H. rewrite rev_involutive. reflexivity. symmetry. apply H0. Qed.
-(** [] *)
-
-(** **** Exercise: 1 star, optional (apply_rewrite)  *)
-(** Briefly explain the difference between the tactics [apply] and
-    [rewrite].  Are there situations where both can usefully be
-    applied?
-  (* FILL IN HERE *)
-*)
-(** [] *)
-
 
 (* ###################################################### *)
 (** * The [apply ... with ...] Tactic *)
@@ -770,7 +734,7 @@ Theorem double_induction2: forall (P : nat -> nat -> Prop),
   (forall m n, P m n -> P (S m) (S n)) ->
   forall m n, P m n.
 Proof. induction m. induction n. trivial.
-auto. induction n. debug auto. auto. Qed.
+auto. induction n. auto. auto. Qed.
 
 Print double_induction.
 
@@ -935,7 +899,7 @@ Proof.
 Theorem bool_fn_applied_thrice : 
   forall (f : bool -> bool) (b : bool), 
   f (f (f b)) = f b.
-Proof. intros. destruct (f true) eqn:a; destruct (f false) eqn:c; destruct b; repeat(rewrite a || rewrite c); trivial.
+Proof. intros. destruct (f true) eqn:a; destruct (f false) eqn:c; destruct b; repeat(rewrite a || rewrite c); trivial. Qed.
 
 (** **** Exercise: 2 stars (override_same)  *)
 Theorem override_same : forall (X:Type) x1 k1 k2 (f : nat->X),
@@ -1088,13 +1052,10 @@ Proof. intros. apply beq_nat_true in H. subst. apply beq_nat_true in H0. subst. 
     things than necessary.  Hint: what property do you need of [l1]
     and [l2] for [split] [combine l1 l2 = (l1,l2)] to be true?)  *)
 
-Definition split_combine_statement : Prop :=  forall X Y (l : list (X * Y)) l1 l2,
+Theorem split_combine_statement :  forall X Y (l : list (X * Y)) l1 l2,
   length l1 = length l2 ->
     split (@combine X Y l1 l2) = (l1,l2).
-
-
-Theorem split_combine : split_combine_statement.
-Proof. unfold split_combine_statement. intros X Y. induction l1. destruct l2. trivial. discriminate. intros. simpl in H. destruct l2. simpl in H. inversion H. inversion H. apply IHl1 in H1. simpl. rewrite H1. trivial. Qed.
+Proof. intros X Y. induction l1. destruct l2. trivial. discriminate. intros. simpl in H. destruct l2. simpl in H. inversion H. inversion H. apply IHl1 in H1. simpl. rewrite H1. trivial. Qed.
 
 (** [] *)
 
@@ -1134,5 +1095,8 @@ Fixpoint existsb {X: Type} (l: list X) (p: X -> bool): bool := match l with
 
 Definition existsb' {X: Type} (l: list X) (p: X -> bool) : bool := (negb (forallb l (fun x => (negb (p x))))).
 
-Theorem existsb_eq: forall X: Type, forall l: list X, forall p, (existsb l p) = (existsb' l p).
+
+
+
+Theorem existsb_eq: forall X: Type, forall l: (list X), forall p, (existsb l p) = (existsb' l p).
 Proof. induction l. simpl. unfold existsb'. unfold forallb. reflexivity. simpl. intros p. destruct (p a) eqn:FF. unfold existsb'. destruct (forallb (a ::l)) eqn:GG. unfold forallb in GG. rewrite FF in GG. simpl in GG. inversion GG. reflexivity. rewrite IHl. unfold existsb'. unfold forallb. rewrite FF. reflexivity. Qed.
