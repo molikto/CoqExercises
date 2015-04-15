@@ -121,68 +121,13 @@ Proof.
 
 Theorem ev_ev__ev : forall n m,
   ev (n+m) -> ev n -> ev m.
-Proof.
-
-(** **** Exercise: 3 stars, optional (ev_plus_plus)  *)
-(** Here's an exercise that just requires applying existing lemmas.  No
-    induction or even case analysis is needed, but some of the rewriting
-    may be tedious. *)
-
-Theorem ev_plus_plus : forall n m p,
-  ev (n+m) -> ev (n+p) -> ev (m+p).
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. induction H0. simpl in H. trivial. inversion H. apply IHev in H2. trivial. Qed. 
 
 
-(* ####################################################### *)
-(** * Discussion and Variations *)
-(** ** Computational vs. Inductive Definitions *)
-
-(** We have seen that the proposition "[n] is even" can be
-    phrased in two different ways -- indirectly, via a boolean testing
-    function [evenb], or directly, by inductively describing what
-    constitutes evidence for evenness.  These two ways of defining
-    evenness are about equally easy to state and work with.  Which we
-    choose is basically a question of taste.
-
-    However, for many other properties of interest, the direct
-    inductive definition is preferable, since writing a testing
-    function may be awkward or even impossible.  
-
-    One such property is [beautiful].  This is a perfectly sensible
-    definition of a set of numbers, but we cannot translate its
-    definition directly into a Coq Fixpoint (or into a recursive
-    function in any other common programming language).  We might be
-    able to find a clever way of testing this property using a
-    [Fixpoint] (indeed, it is not too hard to find one in this case),
-    but in general this could require arbitrarily deep thinking.  In
-    fact, if the property we are interested in is uncomputable, then
-    we cannot define it as a [Fixpoint] no matter how hard we try,
-    because Coq requires that all [Fixpoint]s correspond to
-    terminating computations.
-
-    On the other hand, writing an inductive definition of what it
-    means to give evidence for the property [beautiful] is
-    straightforward. *)
-
-
-
-
-(* ####################################################### *)
-(** ** Parameterized Data Structures *)
-
-(** So far, we have only looked at propositions about natural numbers. However, 
-   we can define inductive predicates about any type of data. For example, 
-   suppose we would like to characterize lists of _even_ length. We can 
-   do that with the following definition.  *)
 
 Inductive ev_list {X:Type} : list X -> Prop :=
   | el_nil : ev_list []
   | el_cc  : forall x y l, ev_list l -> ev_list (x :: y :: l).
-
-(** Of course, this proposition is equivalent to just saying that the
-length of the list is even. *)
 
 Lemma ev_list__ev_length: forall X (l : list X), ev_list l -> ev (length l).
 Proof. 
@@ -191,9 +136,6 @@ Proof.
     Case "el_cc".  simpl.  apply ev_SS. apply IHev_list.
 Qed.
 
-(** However, because evidence for [ev] contains less information than
-evidence for [ev_list], the converse direction must be stated very
-carefully. *)
 
 Lemma ev_length__ev_list: forall X n, ev n -> forall (l : list X), n = length l -> ev_list l.
 Proof.
@@ -207,63 +149,53 @@ Proof.
     SCase "[x]". inversion H2.
     SCase "x :: x0 :: l". apply el_cc. apply IHev. inversion H2. reflexivity.
 Qed.
-    
-
-(** **** Exercise: 4 stars (palindromes)  *)
-(** A palindrome is a sequence that reads the same backwards as
-    forwards.
-
-    - Define an inductive proposition [pal] on [list X] that
-      captures what it means to be a palindrome. (Hint: You'll need
-      three cases.  Your definition should be based on the structure
-      of the list; just having a single constructor
-        c : forall l, l = rev l -> pal l
-      may seem obvious, but will not work very well.)
- 
-    - Prove [pal_app_rev] that 
-       forall l, pal (l ++ rev l).
-    - Prove [pal_rev] that 
-       forall l, pal l -> l = rev l.
-*)
-
-(* FILL IN HERE *)
-(** [] *)
-
-(* Again, the converse direction is much more difficult, due to the
-lack of evidence. *)
-
-(** **** Exercise: 5 stars, optional (palindrome_converse)  *)
-(** Using your definition of [pal] from the previous exercise, prove
-    that
-     forall l, l = rev l -> pal l.
-*)
-
-(* FILL IN HERE *)
-(** [] *)
 
 
+Inductive pal {X: Type}: list X -> Prop :=
+  | empty: pal []
+  | single: forall a: X, pal [a]
+  | other: forall l: list X, forall p: pal l, forall val: X, pal ([val] ++ l ++ [val]).
+  
+Require Import Coq.Lists.List.
 
-(* ####################################################### *)
-(** ** Relations *)
 
-(** A proposition parameterized by a number (such as [ev] or
-    [beautiful]) can be thought of as a _property_ -- i.e., it defines
-    a subset of [nat], namely those numbers for which the proposition
-    is provable.  In the same way, a two-argument proposition can be
-    thought of as a _relation_ -- i.e., it defines a set of pairs for
-    which the proposition is provable. *)
+Goal forall X: Type, forall l: list X, pal (l ++ rev l).
+Proof. intros. induction l. simpl. constructor. replace ((a :: l) ++ rev (a :: l)) with ([a] ++ (l ++ rev l) ++ [a]). constructor. trivial. simpl. assert (forall l: list X, forall a, (snoc (l) a = l ++ [a])). induction l0. reflexivity. simpl. intros a1. rewrite IHl0. reflexivity. assert ((l ++ rev l) ++ [a] = l ++ rev l ++ [a]). set (app_assoc l (rev l) [a]). symmetry. trivial. rewrite H0. reflexivity. Qed.
+
+
+Goal forall t l, pal l -> @rev t l = l.
+Proof. intros. induction H. trivial. trivial. simpl. rewrite rev_unit. rewrite IHpal. reflexivity. Qed.
+
+Fixpoint last {X: Type}  (h: X) (t: list X) :=
+  match t with
+  | [] => h
+  | a :: b => last a b
+  end.
+
+Fixpoint front {X: Type} (h: X) (t: list X) :=
+  match t with 
+  | [] => []
+  | a:: b => h :: (front a b)
+  end.
+  
+
+Definition shift: forall (X: Type) (a: X) (b: list X), exists (c: list X) (d: X), a :: b = snoc c d. intros. destruct b. exists []. exists a. trivial. exists (front a (x :: b)). exists (last a (x :: b)). generalize dependent a. generalize dependent x. induction b. trivial. simpl. intros. set (IHb a x). assert (snoc (front x (a :: b)) (last x (a :: b)) = x :: (snoc (front a b) (last a b))). simpl. trivial. rewrite H in e. rewrite e. trivial. Qed.
+
+Theorem snoc_app: forall (X: Type) (f: list X) (a: X), snoc f a = f ++ [a].
+Proof. intros. induction f. trivial. simpl. rewrite IHf. trivial. Qed.
+
+Theorem list_triple_rec {X: Type} (p: list X -> Prop) (p0: (p nil)) (p1: forall a: X, (p [a])) (pn: forall a b: X, forall k: list X, (p k) -> (p (a :: (k ++ [b])))): (forall l: list X, (p l)).
+Proof. destruct l. trivial. destruct l. trivial. set (shift X x0 l). inversion e. inversion H. rewrite H0. clear H0. clear H. clear e. clear l. clear x0. induction x1. simpl. apply (pn x x2 []). trivial. set (shift X a x1). inversion e. inversion H. rewrite H0. clear H0. clear H. clear e. 
+admit. Qed.
+
+
+Goal forall t l, @rev t l = l -> pal l.
+Proof. intros t. refine (list_triple_rec (fun (l: list t) => rev l = l -> pal l) _ _ _). intros. constructor. intros. constructor. intros. simpl in H0. rewrite rev_unit in H0. inversion H0. subst. inversion H0. Abort.
+
 
 Module LeModule.  
 
 
-(** One useful example is the "less than or equal to"
-    relation on numbers. *)
-
-(** The following definition should be fairly intuitive.  It
-    says that there are two ways to give evidence that one number is
-    less than or equal to another: either observe that they are the
-    same number, or give evidence that the first is less than or equal
-    to the predecessor of the second. *)
 
 Inductive le : nat -> nat -> Prop :=
   | le_n : forall n, le n n
@@ -271,113 +203,40 @@ Inductive le : nat -> nat -> Prop :=
 
 Notation "m <= n" := (le m n).
 
-
-(** Proofs of facts about [<=] using the constructors [le_n] and
-    [le_S] follow the same patterns as proofs about properties, like
-    [ev] in chapter [Prop].  We can [apply] the constructors to prove [<=]
-    goals (e.g., to show that [3<=3] or [3<=6]), and we can use
-    tactics like [inversion] to extract information from [<=]
-    hypotheses in the context (e.g., to prove that [(2 <= 1) -> 2+2=5].) *)
-
-(** *** *)
-(** Here are some sanity checks on the definition.  (Notice that,
-    although these are the same kind of simple "unit tests" as we gave
-    for the testing functions we wrote in the first few lectures, we
-    must construct their proofs explicitly -- [simpl] and
-    [reflexivity] don't do the job, because the proofs aren't just a
-    matter of simplifying computations.) *)
-
-Theorem test_le1 :
-  3 <= 3.
-Proof.
-  (* WORKED IN CLASS *)
-  apply le_n.  Qed.
-
-Theorem test_le2 :
-  3 <= 6.
-Proof.
-  (* WORKED IN CLASS *)
-  apply le_S. apply le_S. apply le_S. apply le_n.  Qed.
-
-Theorem test_le3 :
-  (2 <= 1) -> 2 + 2 = 5.
-Proof. 
-  (* WORKED IN CLASS *)
-  intros H. inversion H. inversion H2.  Qed.
-
-(** *** *)
-(** The "strictly less than" relation [n < m] can now be defined
-    in terms of [le]. *)
-
-End LeModule.
-
 Definition lt (n m:nat) := le (S n) m.
 
 Notation "m < n" := (lt m n).
 
-(** Here are a few more simple relations on numbers: *)
+Inductive total_relation: nat -> nat -> Prop := | tttt : forall n m: nat, total_relation n m.
 
-Inductive square_of : nat -> nat -> Prop :=
-  sq : forall n:nat, square_of n (n * n).
+Inductive empty_relation: nat -> nat -> Prop := .
 
-Inductive next_nat : nat -> nat -> Prop :=
-  | nn : forall n:nat, next_nat n (S n).
-
-Inductive next_even : nat -> nat -> Prop :=
-  | ne_1 : forall n, ev (S n) -> next_even n (S n)
-  | ne_2 : forall n, ev (S (S n)) -> next_even n (S (S n)).
-
-(** **** Exercise: 2 stars (total_relation)  *)
-(** Define an inductive binary relation [total_relation] that holds
-    between every pair of natural numbers. *)
-
-(* FILL IN HERE *)
-(** [] *)
-
-(** **** Exercise: 2 stars (empty_relation)  *)
-(** Define an inductive binary relation [empty_relation] (on numbers)
-    that never holds. *)
-
-(* FILL IN HERE *)
-(** [] *)
-
-(** **** Exercise: 2 stars, optional (le_exercises)  *)
-(** Here are a number of facts about the [<=] and [<] relations that
-    we are going to need later in the course.  The proofs make good
-    practice exercises. *)
 
 Lemma le_trans : forall m n o, m <= n -> n <= o -> m <= o.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. induction H0. trivial. apply IHle in H. constructor. trivial. Qed.
 
 Theorem O_le_n : forall n,
   0 <= n.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. induction n. constructor. constructor. trivial. Qed.
 
 Theorem n_le_m__Sn_le_Sm : forall n m,
   n <= m -> S n <= S m.
-Proof. 
-  (* FILL IN HERE *) Admitted.
+Proof. intros. induction H. constructor. constructor. trivial. Qed.
 
 
 Theorem Sn_le_Sm__n_le_m : forall n m,
   S n <= S m -> n <= m.
-Proof. 
-  (* FILL IN HERE *) Admitted.
+Proof. intros. inversion H. subst. constructor. subst. assert (n <= S n). constructor. constructor. apply (le_trans n (S n) m H0 H2). Qed. 
 
 
 Theorem le_plus_l : forall a b,
   a <= a + b.
-Proof. 
-  (* FILL IN HERE *) Admitted.
+Proof.  induction b. rewrite plus_n_O. constructor. rewrite <- plus_n_Sm. constructor. trivial. Qed.
 
 Theorem plus_lt : forall n1 n2 m,
   n1 + n2 < m ->
   n1 < m /\ n2 < m.
-Proof. 
- unfold lt. 
- (* FILL IN HERE *) Admitted.
+Proof.   
 
 Theorem lt_S : forall n m,
   n < m ->
