@@ -118,22 +118,23 @@ Theorem even5_nonsense :
 Proof.
   intros. inversion H. inversion H1. inversion H3. Qed.
 
+Require Import Coq.Lists.List.
 
 Theorem ev_ev__ev : forall n m,
   ev (n+m) -> ev n -> ev m.
-Proof. intros. induction H0. simpl in H. trivial. inversion H. apply IHev in H2. trivial. Qed. 
+Proof. intros. induction H0. simpl in H. trivial. inversion H. apply IHev in H2. trivial. Qed.
 
 
 
 Inductive ev_list {X:Type} : list X -> Prop :=
-  | el_nil : ev_list []
-  | el_cc  : forall x y l, ev_list l -> ev_list (x :: y :: l).
+  | el_nil : ev_list nil
+  | el_cc  : forall x y l, ev_list l -> ev_list (cons x (cons y l)).
 
 Lemma ev_list__ev_length: forall X (l : list X), ev_list l -> ev (length l).
 Proof. 
     intros X l H. induction H.
-    Case "el_nil". simpl. apply ev_0.
-    Case "el_cc".  simpl.  apply ev_SS. apply IHev_list.
+     simpl. apply ev_0.
+      simpl.  apply ev_SS. apply IHev_list.
 Qed.
 
 
@@ -141,22 +142,21 @@ Lemma ev_length__ev_list: forall X n, ev n -> forall (l : list X), n = length l 
 Proof.
   intros X n H. 
   induction H.
-  Case "ev_0". intros l H. destruct l.
-    SCase "[]". apply el_nil. 
-    SCase "x::l". inversion H.
-  Case "ev_SS". intros l H2. destruct l. 
-    SCase "[]". inversion H2. destruct l.
-    SCase "[x]". inversion H2.
-    SCase "x :: x0 :: l". apply el_cc. apply IHev. inversion H2. reflexivity.
+   intros l H. destruct l.
+     apply el_nil. 
+     inversion H.
+   intros l H2. destruct l. 
+     inversion H2. destruct l.
+     inversion H2.
+     apply el_cc. apply IHev. inversion H2. reflexivity.
 Qed.
 
 
 Inductive pal {X: Type}: list X -> Prop :=
-  | empty: pal []
+  | empty: pal nil
   | single: forall a: X, pal [a]
   | other: forall l: list X, forall p: pal l, forall val: X, pal ([val] ++ l ++ [val]).
   
-Require Import Coq.Lists.List.
 
 
 Goal forall X: Type, forall l: list X, pal (l ++ rev l).
@@ -177,29 +177,15 @@ Fixpoint front {X: Type} (h: X) (t: list X) :=
   | [] => []
   | a:: b => h :: (front a b)
   end.
-  
-
-Definition shift: forall (X: Type) (a: X) (b: list X), exists (c: list X) (d: X), a :: b = snoc c d. intros. destruct b. exists []. exists a. trivial. exists (front a (x :: b)). exists (last a (x :: b)). generalize dependent a. generalize dependent x. induction b. trivial. simpl. intros. set (IHb a x). assert (snoc (front x (a :: b)) (last x (a :: b)) = x :: (snoc (front a b) (last a b))). simpl. trivial. rewrite H in e. rewrite e. trivial. Qed.
-
-Theorem snoc_app: forall (X: Type) (f: list X) (a: X), snoc f a = f ++ [a].
-Proof. intros. induction f. trivial. simpl. rewrite IHf. trivial. Qed.
-
-Theorem list_triple_rec {X: Type} (p: list X -> Prop) (p0: (p nil)) (p1: forall a: X, (p [a])) (pn: forall a b: X, forall k: list X, (p k) -> (p (a :: (k ++ [b])))): (forall l: list X, (p l)).
-Proof. destruct l. trivial. destruct l. trivial. set (shift X x0 l). inversion e. inversion H. rewrite H0. clear H0. clear H. clear e. clear l. clear x0. induction x1. simpl. apply (pn x x2 []). trivial. set (shift X a x1). inversion e. inversion H. rewrite H0. clear H0. clear H. clear e. 
-admit. Qed.
-
-
-Goal forall t l, @rev t l = l -> pal l.
-Proof. intros t. refine (list_triple_rec (fun (l: list t) => rev l = l -> pal l) _ _ _). intros. constructor. intros. constructor. intros. simpl in H0. rewrite rev_unit in H0. inversion H0. subst. inversion H0. Abort.
-
-
-Module LeModule.  
-
 
 
 Inductive le : nat -> nat -> Prop :=
   | le_n : forall n, le n n
   | le_S : forall n m, (le n m) -> (le n (S m)).
+
+Theorem list_length_0: forall (T: Type) (l: list T), (length l = 0) -> l = [].
+Proof. intros. destruct l. trivial. simpl in H. inversion H. Qed. 
+
 
 Notation "m <= n" := (le m n).
 
@@ -214,6 +200,58 @@ Inductive empty_relation: nat -> nat -> Prop := .
 
 Lemma le_trans : forall m n o, m <= n -> n <= o -> m <= o.
 Proof. intros. induction H0. trivial. apply IHle in H. constructor. trivial. Qed.
+
+Theorem le_0_n: forall (n: nat), le 0 n.
+Proof. induction n. constructor. set (le_S 0 n IHn). trivial. Qed.
+
+Theorem le_S_n: forall (m n: nat), (le (S m) n) -> (le m n).
+Proof. intros. assert (le m (S m)). constructor. constructor. set (le_trans m (S m) n). apply l. trivial. trivial. Qed.
+
+Theorem le_n_S: forall (m n: nat), (le m n) -> (le m (S n)).
+Proof. intros. constructor. trivial.  Qed.
+
+Theorem le_S_S: forall (m n: nat), (le (S m) (S n)) <-> (le m n).
+Proof. split. intros. inversion H. constructor. subst. apply le_S_n in H2. trivial. intros. induction H. constructor. assert (S m <= S( S m)). constructor. constructor. set (le_trans (S n) (S m) (S (S m))). apply l. trivial. trivial. Qed.
+
+Theorem generalized_list_induction: 
+    forall 
+      (T: Type)
+      (p: list T -> Prop)
+      (p0: p nil) 
+      (pn: forall
+        (n: nat),
+          (forall (j: list T), (le (S (length j)) n) -> p j) ->
+        (forall (l: list T), length l = n -> p l))
+      , (forall (l: list T), p l).
+Proof. intro. intro. intro. intro. assert (forall n: nat,
+  (forall (l: list T) (nleq: le (length l) n), p l) /\
+  ((forall (l: list T) (nleq: le (length l) n), p l) -> (forall (l: list T) (nleq: le (length l) (S n)), p l))
+). induction n. split. intros. inversion nleq. apply list_length_0 in H1. rewrite H1. trivial. intros. inversion nleq. set (pn 1). assert  (forall j : list T, le (S (length j)) 1 -> p j). intros. inversion H1. apply list_length_0 in H5. rewrite H5. trivial. inversion H5. set (p1 H1). subst. set (p2 l H2). trivial. subst. inversion nleq. inversion H2. subst. rewrite H5 in H3.   apply list_length_0 in H5. rewrite H5. trivial. subst. inversion H3. apply list_length_0 in H4. rewrite H4. trivial. inversion IHn. clear IHn. set (H0 H). split.  trivial. intros. clear p1. clear H0. inversion nleq. set (pn (S (S n))). assert (forall j : list T, le (S (length j)) (S (S n)) -> p j). subst. intros. rewrite le_S_S in H0. set (H1 j H0). trivial. subst. set (p1 H2 l H3). trivial. subst. set (H1 l H3). trivial. intros. set (H (length l)). inversion a. set (H0 l (le_n (length l))). trivial. Qed.
+
+Theorem head1 {T: Type} (l: list T) (a : ~(length l = 0)): T.
+Proof. destruct l. simpl in a. unfold not in a. assert (0 = 0). trivial. set (a H). inversion f. trivial. Qed.
+
+Theorem single_list: forall (T: Type)  (l: list T) (eq: length l = 1), (exists k, l = [k]).
+Proof. intros. destruct l. simpl in eq. inversion eq. destruct l. exists t. trivial. simpl in eq. inversion eq. Qed. 
+
+
+Definition shift: forall (X: Type) (a: X) (b: list X), exists (c: list X) (d: X), a :: b = snoc c d. intros. destruct b. exists []. exists a. trivial. exists (front a (x :: b)). exists (last a (x :: b)). generalize dependent a. generalize dependent x. induction b. trivial. simpl. intros. set (IHb a x). assert (snoc (front x (a :: b)) (last x (a :: b)) = x :: (snoc (front a b) (last a b))). simpl. trivial. rewrite H in e. rewrite e. trivial. Qed.
+
+
+Theorem snoc_app: forall (X: Type) (f: list X) (a: X), snoc f a = f ++ [a].
+Proof. intros. induction f. trivial. simpl. rewrite IHf. trivial. Qed.
+
+
+Theorem decor_list: forall (T: Type) (l: list T) (len: le 2 (length l)), (exists (a b: T) (j: list T), l = a :: j ++ [b]).
+Proof. intros. destruct l. simpl in len. inversion len. destruct l. simpl in len. inversion len. subst. inversion H1. set (shift T t0 l). inversion e.  inversion H. exists t. exists x0. exists x. rewrite H0. rewrite snoc_app. trivial. Qed.
+
+
+Goal forall (T: Type) (l: list T), @rev T l = l -> pal l.
+Proof. intros T. refine ((generalized_list_induction T) (fun (l: list T) => (@rev T l = l -> pal l)) _ _). intros. constructor. intros. destruct n. apply list_length_0 in H0. rewrite H0. constructor. destruct n. set (single_list T l H0). inversion e. rewrite H2. constructor. assert (le 2 (length l)). rewrite H0. apply le_S_S. rewrite le_S_S. apply le_0_n. set (decor_list  T l H2). inversion e. clear e. inversion H3. clear H3. inversion H4. clear H4. assert (le (S (length x1)) (S (S n))). assert ((S ( S (length x1))) = S (S n)). rewrite <- H0. rewrite H3. simpl. rewrite app_length. simpl. rewrite plus_comm. simpl. trivial. apply -> le_S_S. constructor. rewrite H4. constructor. set (H x1 H4). assert (rev x1 = x1). rewrite H3 in H1. simpl in H1. rewrite rev_app_distr in H1. simpl in H1. inversion H1. subst.  assert (rev( rev x1 ++ [x]) = rev (x1 ++ [x])). rewrite H7. trivial. rewrite rev_app_distr in H3. rewrite rev_app_distr in H3. inversion H3. rewrite rev_involutive in H6. symmetry. rewrite rev_involutive. trivial. rewrite H3. assert (x :: x1 ++ [x0]= [x] ++ x1 ++ [x0]). simpl. trivial. rewrite H6. set (H x1 H4 H5). assert (x = x0). rewrite H3 in H1. simpl in H1. rewrite rev_app_distr in H1. simpl in H1. inversion H1. trivial. rewrite H7. constructor. trivial. Qed.
+
+
+
+
 
 Theorem O_le_n : forall n,
   0 <= n.
@@ -233,41 +271,40 @@ Theorem le_plus_l : forall a b,
   a <= a + b.
 Proof.  induction b. rewrite plus_n_O. constructor. rewrite <- plus_n_Sm. constructor. trivial. Qed.
 
+Theorem lt_trans_r: forall a b c, a <= b -> b < c -> a < c.
+Proof. intros. induction H. trivial. assert (m < c). unfold lt. unfold lt in H0. assert (S m <= S (S m)). constructor. constructor. refine (le_trans _ _ _ H1 H0). apply IHle in H1. trivial. Qed. 
+
+Theorem lt_trans_l: forall a b c, a < b -> b <= c -> a < c.
+Proof. intros. induction H0. trivial. unfold lt. constructor. unfold lt in H. refine (le_trans _ _ _ H H0). Qed.
+
 Theorem plus_lt : forall n1 n2 m,
   n1 + n2 < m ->
   n1 < m /\ n2 < m.
-Proof.   
+Proof. intros. split. assert (n1 <= n1 + n2). apply le_plus_l. refine (lt_trans_r _ _ _ H0 H). assert (n2 <= n1 + n2). rewrite plus_comm. apply le_plus_l. refine (lt_trans_r _ _ _ H0 H). Qed.
+
 
 Theorem lt_S : forall n m,
   n < m ->
   n < S m.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. assert (m <= S m). constructor. constructor. refine (lt_trans_l _ _ _ H H0). Qed.
 
 Theorem ble_nat_true : forall n m,
   ble_nat n m = true -> n <= m.
-Proof. 
-  (* FILL IN HERE *) Admitted.
+Proof.  induction n. intros . apply le_0_n. induction m. simpl. intros. inversion H. simpl. intros. apply IHn in H. rewrite le_S_S. trivial. Qed.
 
 Theorem le_ble_nat : forall n m,
   n <= m ->
   ble_nat n m = true.
-Proof.
-  (* Hint: This may be easiest to prove by induction on [m]. *)
-  (* FILL IN HERE *) Admitted.
+Proof. intros. generalize dependent n. induction m. intros. inversion H. simpl. trivial. intros. induction n. simpl. trivial. rewrite le_S_S in H. apply IHm in H. simpl. trivial. Qed. 
 
 Theorem ble_nat_true_trans : forall n m o,
   ble_nat n m = true -> ble_nat m o = true -> ble_nat n o = true.                               
-Proof.
-  (* Hint: This theorem can be easily proved without using [induction]. *)
-  (* FILL IN HERE *) Admitted.
+Proof. intros. apply ble_nat_true in H. apply ble_nat_true in H0. apply le_ble_nat. refine (le_trans _ _ _ H H0). Qed.
 
 (** **** Exercise: 2 stars, optional (ble_nat_false)  *)
 Theorem ble_nat_false : forall n m,
   ble_nat n m = false -> ~(n <= m).
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. induction n. intros. simpl in H. inversion H. induction m. simpl. intros. unfold not. intros. inversion H0. simpl. intros. apply IHn in H. unfold not. intros. rewrite le_S_S in H0. apply H in H0. trivial. Qed.
 
 
 (** **** Exercise: 3 stars (R_provability2)  *)
@@ -306,8 +343,16 @@ Inductive R : nat -> nat -> nat -> Prop :=
     [n], and [o], and vice versa?
 *)
 
-(* FILL IN HERE *)
-(** [] *)
+Goal forall a b c, a + b = c -> R a b c.
+Proof. intros. rewrite <- H. clear H. generalize dependent a. generalize dependent b. refine (double_induction _ _ _ _ _ ). simpl. constructor. simpl. constructor. trivial. simpl. intros. rewrite (plus_0_r). rewrite plus_0_r in H. constructor. trivial. intros. rewrite plus_Sn_m. rewrite plus_comm. rewrite plus_Sn_m. constructor. constructor. rewrite plus_comm. trivial. Qed.
+
+Require Import Omega Arith List Recdef Program NPeano.
+
+
+
+Goal forall a b c, R a b c -> a + b = c.
+Proof. intros. induction H. trivial. simpl. rewrite
+IHR. trivial. rewrite plus_comm. rewrite plus_Sn_m. rewrite plus_comm. rewrite IHR. trivial. simpl in IHR. rewrite plus_comm in IHR. simpl in IHR. inversion IHR. rewrite plus_comm. trivial. rewrite plus_comm. trivial. Qed.
 
 End R.
 
@@ -343,7 +388,35 @@ End R.
       Hint: choose your induction carefully!
 *)
 
-(* FILL IN HERE *)
+Inductive subseq: (list nat) -> (list nat) -> Prop :=
+  | sub_nil: subseq [] []
+  | sub_skip: forall  l r e, subseq l r -> subseq l (e :: r)
+  | sub_cons: forall l r e, subseq l r -> subseq (e :: l) (e:: r).
+
+Theorem sub_refl: forall l: list nat, (subseq l l).
+Proof. induction l. constructor. constructor 3. trivial. Qed.
+
+Theorem cons_to_app: forall T a b, @cons T a b = [a] ++ b.
+Proof. intros. simpl. trivial. Qed.
+
+Theorem subseq_nil: forall l, subseq [] l.
+Proof. intros. induction l. constructor. constructor. trivial. Qed.
+
+Theorem sub_app: forall l1 l2 l3, subseq l1 l2 -> subseq l1 (l2 ++ l3).
+Proof. intros. induction H. apply subseq_nil. rewrite cons_to_app. rewrite <- app_assoc. simpl. constructor. trivial. assert ((e :: r) ++ l3 = e :: r ++ l3). rewrite cons_to_app. rewrite <- app_assoc. simpl. trivial. rewrite H0. clear H0. constructor 3. trivial. Qed.
+
+Require Export Program.
+
+Theorem sub_head: forall a s l, subseq (a :: s) l -> subseq s l.
+Proof. intros. dependent induction H. constructor. trivial.  constructor. trivial. Qed.
+
+(* FIXME *)
+Theorem sub_trans : forall l1 l2 l3, subseq l1 l2 -> subseq l2 l3 -> subseq l1 l3.
+Proof. admit.
+Qed.
+
+
+
 (** [] *)
 
 (** **** Exercise: 2 stars, optional (R_provability)  *)
@@ -430,12 +503,6 @@ Proof. reflexivity.  Qed.
 (** We have also seen _parameterized propositions_, such as [even] and
     [beautiful]. *)
 
-Check (even 4).
-(* ===> even 4 : Prop *)
-Check (even 3).
-(* ===> even 3 : Prop *)
-Check even. 
-(* ===> even : nat -> Prop *)
 
 (** *** *)
 (** The type of [even], i.e., [nat->Prop], can be pronounced in
@@ -500,35 +567,46 @@ Definition natural_number_induction_valid : Prop :=
     that [P n] is equivalent to [Podd n] when [n] is odd, and
     equivalent to [Peven n] otherwise. *)
 
-Definition combine_odd_even (Podd Peven : nat -> Prop) : nat -> Prop :=
-  (* FILL IN HERE *) admit.
+Definition combine_odd_even (Podd Peven : nat -> Prop) n : Prop :=
+  if oddb n then Podd n else Peven n.
 
-(** To test your definition, see whether you can prove the following
-    facts: *)
+
+
 
 Theorem combine_odd_even_intro : 
   forall (Podd Peven : nat -> Prop) (n : nat),
     (oddb n = true -> Podd n) ->
     (oddb n = false -> Peven n) ->
     combine_odd_even Podd Peven n.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. unfold combine_odd_even in *. remember (oddb n). destruct b. apply H. trivial. apply H0. trivial. Qed.
 
 Theorem combine_odd_even_elim_odd :
   forall (Podd Peven : nat -> Prop) (n : nat),
     combine_odd_even Podd Peven n ->
     oddb n = true ->
     Podd n.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. unfold combine_odd_even in *. rewrite H0 in H. trivial. Qed.
 
 Theorem combine_odd_even_elim_even :
   forall (Podd Peven : nat -> Prop) (n : nat),
     combine_odd_even Podd Peven n ->
     oddb n = false ->
     Peven n.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. unfold combine_odd_even in H. rewrite H0 in H. trivial. Qed.
+
+Fixpoint true_upto_n__true_everywhere (n : nat) (P : nat -> Prop) :=
+  match n with
+  | O => forall n, P n
+  | S N => (P n) -> true_upto_n__true_everywhere N P
+  end.
+
+
+Example true_upto_n_example :
+    (true_upto_n__true_everywhere 3 (fun n => ev n))
+  = (ev 3 -> ev 2 -> ev 1 -> forall m : nat, ev m).
+  simpl in *.
+  trivial.
+Qed.
 
 (** [] *)
 
@@ -548,6 +626,18 @@ Proof.
 (* 
 Fixpoint true_upto_n__true_everywhere
 (* FILL IN HERE *)
+Fixpoint true_upto_n__true_everywhere (n : nat) (P : nat -> Prop) { struct n } :=
+  match n with
+  | O => forall n, P n
+  | S N => (P n) -> true_upto_n__true_everywhere N P
+  end.
+
+Example true_upto_n_example :
+    (true_upto_n__true_everywhere 3 (fun n => even n))
+  = (even 3 -> even 2 -> even 1 -> forall m : nat, even m).
+  simpl in *.
+  trivial.
+Qed.
 
 Example true_upto_n_example :
     (true_upto_n__true_everywhere 3 (fun n => even n))

@@ -9,7 +9,6 @@ Require Export Induction.
     tactics that, together, allow us to prove theorems about the
     functional programs we have been writing. In particular, we'll
     reason about functions that work with natural numbers and lists.
-
     In particular, we will see:
     - how to use auxiliary lemmas, in both forwards and backwards reasoning;
     - how to reason about data constructors, which are injective and disjoint;
@@ -167,10 +166,8 @@ Proof. intros n m o p. intros H. intros J. rewrite <- H. rewrite J. reflexivity.
     meets the eye: implicit in the definition (and in our informal
     understanding of how datatype declarations work in other
     programming languages) are two other facts:
-
     - The constructor [S] is _injective_.  That is, the only way we can
       have [S n = S m] is if [n = m].
-
     - The constructors [O] and [S] are _disjoint_.  That is, [O] is not
       equal to [S n] for any [n]. *)
 
@@ -191,12 +188,10 @@ Proof. intros n m o p. intros H. intros J. rewrite <- H. rewrite J. reflexivity.
     for some constructors [c] and [d] and arguments [a1 ... an] and
     [b1 ... bm].  Then [inversion H] instructs Coq to "invert" this
     equality to extract the information it contains about these terms:
-
     - If [c] and [d] are the same constructor, then we know, by the
       injectivity of this constructor, that [a1 = b1], [a2 = b2],
       etc.; [inversion H] adds these facts to the context, and tries
       to use them to rewrite the goal.
-
     - If [c] and [d] are different constructors, then the hypothesis
       [H] is contradictory.  That is, a false assumption has crept
       into the context, and this means that any goal whatsoever is
@@ -289,7 +284,6 @@ Proof. intros n. induction n. simpl. reflexivity. simpl. intros contra. inversio
 (** By default, most tactics work on the goal formula and leave
     the context unchanged.  However, most tactics also have a variant
     that performs a similar operation on a statement in the context.
-
     For example, the tactic [simpl in H] performs simplification in
     the hypothesis named [H] in the context. *)
 
@@ -311,7 +305,6 @@ Proof.
     gives us a hypothesis matching [L2].  By contrast, [apply L] is
     "backward reasoning" -- it says that if we know [L1->L2] and we
     are trying to prove [L2], it suffices to prove [L1].  
-
     Here is a variant of a proof from above, using forward reasoning
     throughout instead of backward reasoning. *)
 
@@ -558,23 +551,18 @@ Proof.
     the proposition we prove by induction leaves [n] quantified,
     corresponding to the use of generalize dependent in our formal
     proof.
-
 _Theorem_: For any nats [n] and [m], if [double n = double m], then
   [n = m].
-
 _Proof_: Let [m] be a [nat]. We prove by induction on [m] that, for
   any [n], if [double n = double m] then [n = m].
-
   - First, suppose [m = 0], and suppose [n] is a number such
     that [double n = double m].  We must show that [n = 0].
-
     Since [m = 0], by the definition of [double] we have [double n =
     0].  There are two cases to consider for [n].  If [n = 0] we are
     done, since this is what we wanted to show.  Otherwise, if [n = S
     n'] for some [n'], we derive a contradiction: by the definition of
     [double] we would have [double n = S (S (double n'))], but this
     contradicts the assumption that [double n = 0].
-
   - Otherwise, suppose [m = S m'] and that [n] is again a number such
     that [double n = double m].  We must show that [n = S m'], with
     the induction hypothesis that for every number [s], if [double s =
@@ -583,13 +571,11 @@ _Proof_: Let [m] be a [nat]. We prove by induction on [m] that, for
     By the fact that [m = S m'] and the definition of [double], we
     have [double n = S (S (double m'))].  There are two cases to
     consider for [n].
-
     If [n = 0], then by definition [double n = 0], a contradiction.
     Thus, we may assume that [n = S n'] for some [n'], and again by
     the definition of [double] we have [S (S (double n')) = S (S
     (double m'))], which implies by inversion that [double n' = double
     m'].
-
     Instantiating the induction hypothesis with [n'] thus allows us to
     conclude that [n' = m'], and it follows immediately that [S n' = S
     m'].  Since [S n' = n] and [S m' = m], this is just what we wanted
@@ -747,7 +733,6 @@ Print double_induction2.
     used to perform case analysis of the value of some variable.  But
     sometimes we need to reason by cases on the result of some
     _expression_.  We can also do this with [destruct].
-
     Here are some examples: *)
 
 Definition sillyfun (n : nat) : bool :=
@@ -769,14 +754,12 @@ Proof.
     we are stuck on [if (beq_nat n 3) then ... else ...].  Well,
     either [n] is equal to [3] or it isn't, so we use [destruct
     (beq_nat n 3)] to let us reason about the two cases. 
-
     In general, the [destruct] tactic can be used to perform case
     analysis of the results of arbitrary computations.  If [e] is an
     expression whose type is some inductively defined type [T], then,
     for each constructor [c] of [T], [destruct e] generates a subgoal
     in which all occurrences of [e] (in the goal and in the context)
     are replaced by [c].
-
 *)
 
 Definition override {X: Type} (f: nat->X) (k:nat) (x:X) : nat -> X:=
@@ -917,66 +900,46 @@ Proof. intros.  unfold override.   destruct(beq_nat k1 k2) eqn : Heq. apply beq_
     _automation_ tactics that make Coq do more of the low-level work
     in many cases.  But basically we've got what we need to get work
     done.
-
     Here are the ones we've seen:
-
       - [intros]: 
         move hypotheses/variables from goal to context 
-
       - [reflexivity]:
         finish the proof (when the goal looks like [e = e])
-
       - [apply]:
         prove goal using a hypothesis, lemma, or constructor
-
       - [apply... in H]: 
         apply a hypothesis, lemma, or constructor to a hypothesis in
         the context (forward reasoning)
-
       - [apply... with...]:
         explicitly specify values for variables that cannot be
         determined by pattern matching
-
       - [simpl]:
         simplify computations in the goal 
-
       - [simpl in H]:
         ... or a hypothesis 
-
       - [rewrite]:
         use an equality hypothesis (or lemma) to rewrite the goal 
-
       - [rewrite ... in H]:
         ... or a hypothesis 
-
       - [symmetry]:
         changes a goal of the form [t=u] into [u=t]
-
       - [symmetry in H]:
         changes a hypothesis of the form [t=u] into [u=t]
-
       - [unfold]:
         replace a defined constant by its right-hand side in the goal 
-
       - [unfold... in H]:
         ... or a hypothesis  
-
       - [destruct... as...]:
         case analysis on values of inductively defined types 
-
       - [destruct... eqn:...]:
         specify the name of an equation to be added to the context,
         recording the result of the case analysis
-
       - [induction... as...]:
         induction on values of inductively defined types 
-
       - [inversion]:
         reason by injectivity and distinctness of constructors
-
       - [assert (e) as H]:
         introduce a "local lemma" [e] and call it [H] 
-
       - [generalize dependent x]:
         move the variable [x] (and anything else that depends on it)
         from the context back to an explicit hypothesis in the goal
@@ -1009,9 +972,11 @@ Proof.
     m). intuition. intros m0. intuition. intros m0. intuition.  intros. simpl. assert (m0 <> n0). unfold not in H0. unfold not. intros K.  assert (S m0 = S n0). rewrite K. reflexivity. apply H0 in H1. inversion H1. apply H in H1. trivial. Qed.
 
 
-Goal forall n, 0 <> S n.  unfold not.
+Goal forall n, 0 <> S n.
+  unfold not.
   intros.
-  inversion H.Qed.
+  inversion H.
+Qed.
 
 Theorem neq_sym: forall n m: nat, n <> m -> m <>n.
 Proof. unfold not. intros. symmetry in H0. apply H in H0. inversion H0. Qed.
@@ -1025,9 +990,7 @@ Proof. intros. destruct (beq_nat n m) eqn: Heq. apply beq_nat_true in Heq. subst
 (** **** Exercise: 3 stars, advanced, optional (beq_nat_sym_informal)  *)
 (** Give an informal proof of this lemma that corresponds to your
     formal proof above:
-
    Theorem: For any [nat]s [n] [m], [beq_nat n m = beq_nat m n].
-
    Proof:
    (* FILL IN HERE *)
 []
@@ -1044,7 +1007,6 @@ Proof. intros. apply beq_nat_true in H. subst. apply beq_nat_true in H0. subst. 
 (** We have just proven that for all lists of pairs, [combine] is the
     inverse of [split].  How would you formalize the statement that
     [split] is the inverse of [combine]? When is this property true?
-
     Complete the definition of [split_combine_statement] below with a
     property that states that [split] is the inverse of
     [combine]. Then, prove that the property holds. (Be sure to leave
