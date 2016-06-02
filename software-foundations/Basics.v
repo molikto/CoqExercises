@@ -136,6 +136,7 @@ Compute (next_weekday (next_weekday saturday)).
 Example test_next_weekday:
   (next_weekday (next_weekday saturday)) = tuesday.
 
+
 (** This declaration does two things: it makes an
     assertion (that the second weekday after [saturday] is [tuesday]),
     and it gives the assertion a name that can be used to refer to it
@@ -144,7 +145,7 @@ Example test_next_weekday:
     Having made the assertion, we can also ask Coq to verify it, like
     this: *)
 
-Proof. simpl. reflexivity.  Qed.
+Proof. reflexivity.  Qed.
 
 (** The details are not important for now (we'll come back to
     them in a bit), but essentially this can be read as "The assertion
@@ -193,7 +194,7 @@ Definition andb (b1:bool) (b2:bool) : bool :=
   | false => false
   end.
 
-Definition orb (b1:bool) (b2:bool) : bool :=
+Definition orb (b1: bool) (b2: bool): bool :=
   match b1 with
   | true => true
   | false => b2
@@ -206,13 +207,13 @@ Definition orb (b1:bool) (b2:bool) : bool :=
     table -- for the [orb] function: *)
 
 Example test_orb1:  (orb true  false) = true.
-Proof. simpl. reflexivity.  Qed.
+Proof. reflexivity.  Qed.
 Example test_orb2:  (orb false false) = false.
-Proof. simpl. reflexivity.  Qed.
+Proof. reflexivity.  Qed.
 Example test_orb3:  (orb false true)  = true.
-Proof. simpl. reflexivity.  Qed.
+Proof. reflexivity.  Qed.
 Example test_orb4:  (orb true  true)  = true.
-Proof. simpl. reflexivity.  Qed.
+Proof. reflexivity.  Qed.
 
 (** We can also introduce some familiar syntax for the boolean
     operations we have just defined. The [Infix] command defines new,
@@ -222,7 +223,7 @@ Infix "&&" := andb.
 Infix "||" := orb.
 
 Example test_orb5:  false || false || true = true.
-Proof. simpl. reflexivity. Qed.
+Proof. reflexivity. Qed.
 
 (** _A note on notation_: In [.v] files, we use square brackets to
     delimit fragments of Coq code within comments; this convention,
@@ -245,16 +246,16 @@ Proof. simpl. reflexivity. Qed.
     [false]. *)
 
 Definition nandb (b1:bool) (b2:bool) : bool :=
-  (* FILL IN HERE *) admit.
+  (orb (negb b1) (negb b2)).
 
 Example test_nandb1:               (nandb true false) = true.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_nandb2:               (nandb false false) = true.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_nandb3:               (nandb false true) = true.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_nandb4:               (nandb true true) = false.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 (** [] *)
 
 (** **** Exercise: 1 star (andb3)  *)
@@ -263,16 +264,16 @@ Example test_nandb4:               (nandb true true) = false.
     otherwise. *)
 
 Definition andb3 (b1:bool) (b2:bool) (b3:bool) : bool :=
-  (* FILL IN HERE *) admit.
+   (andb (andb b1 b2) b3).
 
 Example test_andb31:                 (andb3 true true true) = true.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_andb32:                 (andb3 false true true) = false.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_andb33:                 (andb3 true false true) = false.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 Example test_andb34:                 (andb3 true true false) = false.
-(* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 (** [] *)
 
 (* ###################################################################### *)
@@ -332,6 +333,7 @@ Inductive nat : Type :=
   | O : nat
   | S : nat -> nat.
 
+
 (** The clauses of this definition can be read:
       - [O] is a natural number (note that this is the letter "[O],"
         not the numeral "[0]").
@@ -366,23 +368,21 @@ Inductive nat : Type :=
     numbers just as we did above -- for example, the predecessor
     function: *)
 
-Definition pred (n : nat) : nat :=
-  match n with
-    | O => O
-    | S n' => n'
-  end.
+Definition pred (n : nat) : nat := match n with | O => O | S n => n end.
 
 (** The second branch can be read: "if [n] has the form [S n']
     for some [n'], then return [n']."  *)
 
 End Playground1.
 
-Definition minustwo (n : nat) : nat :=
+Definition minustwo0 (n : nat) : nat :=
   match n with
     | O => O
     | S O => O
     | S (S n') => n'
   end.
+
+Definition minustwo (n: nat) : nat := (pred (pred n)).
 
 (** Because natural numbers are such a pervasive form of data,
     Coq provides a tiny bit of built-in magic for parsing and printing
@@ -417,6 +417,46 @@ Check minustwo.
     [n-2] is even.  To write such functions, we use the keyword
     [Fixpoint]. *)
 
+Fixpoint plus0 (a b: nat) : nat := 
+  match b with | O => a | S n => S (plus0 a n) end.
+
+
+Lemma plus_O_a: forall a: nat, (plus0 O a) = a.
+Proof. intros. induction a. reflexivity. simpl. rewrite IHa.
+reflexivity. Qed.
+
+Lemma plus_1_a: forall a: nat, (plus0 1 a)  = S a.
+intros. induction a. trivial. simpl. rewrite IHa. trivial. Qed.
+
+Lemma plus_S_a_b: forall a b: nat, S (plus0 a b) = (plus0 (S a) b).
+Proof. intros. induction b. simpl. trivial. simpl. rewrite IHb. trivial. Qed.
+
+Lemma plus_commute: forall a b: nat, (plus0 a b) = (plus0 b a).
+intros. induction b. simpl. rewrite plus_O_a. trivial. 
+simpl. induction a, b. trivial. simpl. rewrite plus_O_a. 
+trivial. simpl. rewrite plus_1_a. trivial. simpl. simpl in IHb.
+simpl in IHa. rewrite IHb. rewrite plus_S_a_b. trivial. Qed. 
+
+
+
+
+Fixpoint plus2 (a b : nat) : nat :=
+ match a with | O => b | S n => S (plus2 n b) end.
+
+
+Lemma plus_eq_plus2: forall a b: nat, (plus0 a b) = (plus2 a b).
+intros. induction a. simpl. rewrite plus_O_a. trivial. simpl.
+rewrite <- IHa. rewrite plus_commute. simpl. rewrite plus_commute.
+trivial. Qed.
+
+Fixpoint plus3 (a b: nat) : nat :=
+ match a with | O => b| S n => (plus3 n (S b)) end.
+
+Compute (plus3 4 5).
+
+Lemma plus_eq_plus3: forall a b: nat, (plus0 a b) = (plus3 a b).
+Admitted.
+
 Fixpoint evenb (n:nat) : bool :=
   match n with
   | O        => true
@@ -424,10 +464,22 @@ Fixpoint evenb (n:nat) : bool :=
   | S (S n') => evenb n'
   end.
 
+Definition oddb (n:nat) : bool   :=   negb (evenb n).
+
+(** 
+
+My feeling is that if everything is defined using 
+induction, then everything that follows will must use induction principle...
+that's bad.
+
+
+**)
+
+
+
 (** We can define [oddb] by a similar [Fixpoint] declaration, but here
     is a simpler definition that is a bit easier to work with: *)
 
-Definition oddb (n:nat) : bool   :=   negb (evenb n).
 
 Example test_oddb1:    oddb 1 = true.
 Proof. simpl. reflexivity.  Qed.
@@ -481,6 +533,8 @@ Fixpoint mult (n m : nat) : nat :=
 Example test_mult1: (mult 3 3) = 9.
 Proof. simpl. reflexivity.  Qed.
 
+
+
 (** You can match two expressions at once by putting a comma
     between them: *)
 
@@ -498,6 +552,10 @@ Fixpoint minus (n m:nat) : nat :=
 
 End Playground2.
 
+
+Definition even0 (a: nat): Prop := exists c, (mult 2 c) = a.
+
+
 Fixpoint exp (base power : nat) : nat :=
   match power with
     | O => S O
@@ -512,13 +570,12 @@ Fixpoint exp (base power : nat) : nat :=
 
     Translate this into Coq. *)
 
-Fixpoint factorial (n:nat) : nat :=
-(* FILL IN HERE *) admit.
+Fixpoint factorial (n:nat) : nat := match n with | O => 1 | S m => (mult n (factorial m)) end.
 
 Example test_factorial1:          (factorial 3) = 6.
-(* FILL IN HERE *) Admitted.
+trivial. Qed.
 Example test_factorial2:          (factorial 5) = (mult 10 12).
-(* FILL IN HERE *) Admitted.
+trivial. Qed.
 (** [] *)
 
 (** We can make numerical expressions a little easier to read and
@@ -592,15 +649,14 @@ Proof. simpl. reflexivity.  Qed.
     yielding a [b]oolean.  Instead of making up a new [Fixpoint] for
     this one, define it in terms of a previously defined function. *)
 
-Definition blt_nat (n m : nat) : bool :=
-  (* FILL IN HERE *) admit.
+Definition blt_nat (n m : nat) : bool := (andb (leb n m) (negb (beq_nat n m))).
 
 Example test_blt_nat1:             (blt_nat 2 2) = false.
-(* FILL IN HERE *) Admitted.
+trivial. Qed.
 Example test_blt_nat2:             (blt_nat 2 4) = true.
-(* FILL IN HERE *) Admitted.
+trivial. Qed.
 Example test_blt_nat3:             (blt_nat 4 2) = false.
-(* FILL IN HERE *) Admitted.
+trivial. Qed.
 (** [] *)
 
 (* ###################################################################### *)
@@ -623,8 +679,7 @@ Example test_blt_nat3:             (blt_nat 4 2) = false.
 
 Theorem plus_O_n : forall n : nat, 0 + n = n.
 Proof.
-  intros n. simpl. reflexivity.  Qed.
-
+  intros n. simpl. reflexivity. Qed. 
 (** (You may notice that the above statement looks different in
     the [.v] file in your IDE than it does in the HTML rendition in
     your browser, if you are viewing both. In [.v] files, we write the
@@ -775,7 +830,7 @@ Proof.
 Theorem plus_id_exercise : forall n m o : nat,
   n = m -> m = o -> n + m = m + o.
 Proof.
-  (* FILL IN HERE *) Admitted.
+intros. rewrite H. rewrite H0. trivial. Qed.
 (** [] *)
 
 (** The [Admitted] command tells Coq that we want to skip trying
@@ -807,7 +862,7 @@ Theorem mult_S_1 : forall n m : nat,
   m = S n ->
   m * (1 + n) = m * m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+intros. simpl. rewrite H. trivial. Qed.
 (** [] *)
 
 
@@ -1014,14 +1069,14 @@ Qed.
 Theorem andb_true_elim2 : forall b c : bool,
   andb b c = true -> c = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+intros. destruct b, c. trivial. trivial. trivial. trivial. Qed.
 (** [] *)
 
 (** **** Exercise: 1 star (zero_nbeq_plus_1)  *)
 Theorem zero_nbeq_plus_1 : forall n : nat,
   beq_nat 0 (n + 1) = false.
 Proof.
-  (* FILL IN HERE *) Admitted.
+intros. destruct n. trivial. trivial. Qed.
 (** [] *)
 
 (* ###################################################################### *)
@@ -1098,7 +1153,17 @@ Fixpoint plus' (n : nat) (m : nat) : nat :=
     _does_ terminate on all inputs, but that Coq will reject because
     of this restriction. *)
 
-(* FILL IN HERE *)
+(**
+Fixpoint what (a: nat) :nat :=
+  match (evenb a) with 
+  | true => 0
+  | false => 
+      match (evenb (a + 1)) with
+      | true => 0
+      | false => (what 0)
+      end
+  end.
+**)
 (** [] *)
 
 (* ###################################################################### *)
@@ -1112,8 +1177,7 @@ Theorem identity_fn_applied_twice :
   forall (f : bool -> bool),
   (forall (x : bool), f x = x) ->
   forall (b : bool), f (f b) = b.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. rewrite H. rewrite H. trivial. Qed.
 
 (** Now state and prove a theorem [negation_fn_applied_twice] similar
     to the previous one but where the second hypothesis says that the
@@ -1132,7 +1196,9 @@ Theorem andb_eq_orb :
   (andb b c = orb b c) ->
   b = c.
 Proof.
-  (* FILL IN HERE *) Admitted.
+intros. destruct b, c. trivial. simpl in H. rewrite H. trivial. simpl in H.
+rewrite H. trivial. trivial. Qed.
+
 (** [] *)
 
 (** **** Exercise: 3 stars (binary)  *)
@@ -1173,7 +1239,33 @@ Proof.
         then incrementing.
 *)
 
-(* FILL IN HERE *)
+Inductive bin: Type :=
+  | Ob: bin
+  | Po: bin -> bin
+  | Ps: bin -> bin.
+
+Fixpoint nor(n: bin) : bin := match n with 
+  | Ob => Ob
+  | Po n => match (nor n) with | Ob => Ob | _ => Po (nor n) end
+  | Ps n => Ps (nor n)
+end.
+
+Definition incr (n: bin): bin := match (nor n) with
+  | Ob => Ps Ob
+  | Po n =>  Ps n
+  | Ps n => Po (Ps n)
+end.
+
+Fixpoint bin_to_nat (n: bin) : nat := match n with 
+  | Ob => 0
+  | Po n => (bin_to_nat n) * 2
+  | Ps n => (bin_to_nat n) * 2 + 1
+end.
+
+Goal (bin_to_nat (Ps (Ps (Ps (Po Ob))))) = 7.
+trivial. Qed.
+
+
 (** [] *)
 
 (** $Date: 2016-05-26 16:17:19 -0400 (Thu, 26 May 2016) $ *)
