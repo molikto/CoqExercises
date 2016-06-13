@@ -118,27 +118,20 @@ Proof.
 
 Theorem mult_0_r : forall n:nat,
   n * 0 = 0.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. induction n. trivial. simpl. trivial. Qed. 
 
 Theorem plus_n_Sm : forall n m : nat, 
   S (n + m) = n + (S m).
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. induction n. simpl. trivial. simpl. rewrite IHn. trivial. Qed.
 
 Theorem plus_comm : forall n m : nat,
   n + m = m + n.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. induction n. simpl. trivial. simpl. rewrite <- plus_n_Sm. rewrite IHn.
+trivial. Qed.
 
 Theorem plus_assoc : forall n m p : nat,
   n + (m + p) = (n + m) + p.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
-
-(** **** Exercise: 2 stars (double_plus)  *)
-(** Consider the following function, which doubles its argument: *)
+Proof. induction n.  simpl. trivial. intros. simpl.  rewrite IHn. trivial. Qed.
 
 Fixpoint double (n:nat) :=
   match n with
@@ -149,9 +142,15 @@ Fixpoint double (n:nat) :=
 (** Use induction to prove this simple fact about [double]: *)
 
 Lemma double_plus : forall n, double n = n + n .
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. induction n. trivial. simpl. rewrite IHn. rewrite plus_n_Sm. trivial. Qed.
+
+(**
+
+The difference between math and CS math, in Coq style math, you almost always write
+inductive definition dirrectly. And I think that's bad. You should write it once, 
+and compose. Like math
+
+**)
 
 (** **** Exercise: 2 stars, optional (evenb_S)  *)
 (** One inconveninent aspect of our definition of [evenb n] is that it
@@ -160,10 +159,12 @@ Proof.
     need an induction hypothesis about [n - 2]. The following lemma
     gives a better characterization of [evenb (S n)]: *)
 
+Theorem negb_negb: forall b: bool, negb (negb b) = b.
+Proof. intros. destruct b. trivial. trivial. Qed.
 Theorem evenb_S : forall n : nat,
   evenb (S n) = negb (evenb n).
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. induction n. trivial. rewrite IHn. simpl. rewrite negb_negb. trivial. Qed.
+ 
 (** [] *)
 
 (** **** Exercise: 1 star (destruct_induction)  *)
@@ -256,19 +257,24 @@ Proof.
 
 Theorem plus_swap : forall n m p : nat,
   n + (m + p) = m + (n + p).
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. assert (n + (m + p) = m + n + p). rewrite plus_assoc.
+assert ( n + m =  m + n). rewrite plus_comm. trivial. rewrite H. trivial.
+assert (m + (n + p) = m + n + p). rewrite plus_assoc. trivial. rewrite H, H0.
+trivial. Qed.
+
 
 (** Now prove commutativity of multiplication.  (You will probably
     need to define and prove a separate subsidiary theorem to be used
     in the proof of this one.  You may find that [plus_swap] comes in
     handy.) *)
 
+Theorem mult_S_p: forall m n: nat, (m * S n = m + m * n).
+Proof. intros. induction m. simpl. trivial. simpl. rewrite IHm. rewrite plus_swap. trivial. Qed.
+
 Theorem mult_comm : forall m n : nat,
   m * n = n * m.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. induction n. induction m. trivial. simpl. rewrite IHm. trivial. 
+simpl. rewrite <- IHn. rewrite mult_S_p. trivial. Qed.  
 
 (** **** Exercise: 3 stars, optional (more_exercises)  *)
 (** Take a piece of paper.  For each of the following theorems, first
@@ -281,32 +287,27 @@ Proof.
 
 Theorem leb_refl : forall n:nat,
   true = leb n n.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. induction n. trivial. simpl. trivial. Qed.
 
 Theorem zero_nbeq_S : forall n:nat,
   beq_nat 0 (S n) = false.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. simpl. trivial. Qed.
 
 Theorem andb_false_r : forall b : bool,
   andb b false = false.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. destruct b. trivial. trivial. Qed.
 
 Theorem plus_ble_compat_l : forall n m p : nat,
   leb n m = true -> leb (p + n) (p + m) = true.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. induction p. trivial.  simpl. trivial. Qed. 
 
 Theorem S_nbeq_0 : forall n:nat,
   beq_nat (S n) 0 = false.
 Proof.
-  (* FILL IN HERE *) Admitted.
+intros. simpl. trivial. Qed.
 
 Theorem mult_1_l : forall n:nat, 1 * n = n.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. simpl. rewrite plus_comm. trivial. Qed.
 
 Theorem all3_spec : forall b c : bool,
     orb
@@ -314,19 +315,21 @@ Theorem all3_spec : forall b c : bool,
       (orb (negb b)
                (negb c))
   = true.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof.  intros. destruct b, c. trivial. trivial. trivial. trivial. Qed.
 
 Theorem mult_plus_distr_r : forall n m p : nat,
   (n + m) * p = (n * p) + (m * p).
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. rewrite mult_comm. assert (n * p = p * n). rewrite mult_comm.
+trivial. rewrite H. assert (m * p = p * m). rewrite mult_comm. trivial. rewrite H0.
+clear H. clear H0. induction p. simpl.  trivial. simpl. rewrite IHp.  
+rewrite plus_assoc.  rewrite plus_swap. rewrite plus_assoc.  rewrite plus_assoc.
+assert (n + m = m + n). rewrite plus_comm. trivial. rewrite H. trivial. Qed.
+
+
 
 Theorem mult_assoc : forall n m p : nat,
   n * (m * p) = (n * m) * p.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. induction n. trivial. simpl. rewrite IHn. rewrite mult_plus_distr_r. trivial. Qed.
 
 (** **** Exercise: 2 stars, optional (beq_nat_refl)  *)
 (** Prove the following theorem.  (Putting the [true] on the left-hand
@@ -337,8 +340,8 @@ Proof.
 
 Theorem beq_nat_refl : forall n : nat,
   true = beq_nat n n.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. induction n. trivial. simpl. trivial. Qed.
+
 (** [] *)
 
 (** **** Exercise: 2 stars, optional (plus_swap')  *)
@@ -353,8 +356,10 @@ Proof.
 
 Theorem plus_swap' : forall n m p : nat,
   n + (m + p) = m + (n + p).
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. replace (n + (m + p)) with (m + p + n). replace (n + p) with (p + n).
+rewrite plus_assoc. trivial. rewrite plus_comm. trivial. rewrite plus_comm. trivial.
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 3 stars, recommended (binary_commute)  *)
@@ -380,7 +385,25 @@ Proof.
     wanting to change your original definitions to make the property
     easier to prove, feel free to do so! *)
 
-(* FILL IN HERE *)
+(*
+Fixpoint bin_topmost (n: bin): bin := match n with 
+  | Ps n => match n with | Ob => Ps Ob | _ => (bin_topmost n) end
+  | Po n => match n with | Ob => Po n | _ => (bin_topmost n) end
+  | Ob => Ob
+end.
+
+Theorem bin_nor_topmost: forall n: bin, (bin_topmost (nor n)) = Ps Ob \/ (nor n) = Ob.
+Proof. intros. induction n. right. trivial.  destruct IHn. left. 
+
+Theorem bin_nor_to_nat: forall n: bin, bin_to_nat n = bin_to_nat (nor n).
+intros. induction n. trivial. 
+
+*)
+
+Theorem bin_to_nat_pres_incr: forall n: bin, bin_to_nat (incr n) = S (bin_to_nat n).
+intros. induction n. trivial. replace (incr (Po n)) with (Ps n). simpl. rewrite plus_comm. trivial.
+simpl. trivial. simpl. rewrite IHn. simpl. rewrite plus_comm. simpl. trivial. Qed.
+
 (** [] *)
 
 (** **** Exercise: 5 stars, advanced (binary_inverse)  *)
@@ -408,7 +431,54 @@ Proof.
     Again, feel free to change your earlier definitions if this helps
     here. *)
 
-(* FILL IN HERE *)
+Fixpoint nat_to_bin (n: nat): bin := match n with
+ | 0 => Ob
+ | S n => incr (nat_to_bin n)
+end.
+
+Theorem nat_to_bin_to_nat: forall n: nat, bin_to_nat (nat_to_bin n) = n.
+intros. induction n. trivial. simpl. rewrite bin_to_nat_pres_incr. rewrite IHn. trivial. Qed.
+
+Lemma nor_Po: forall n: bin, nor (Po n) =  match (nor n) with | Ob => Ob | _ => Po (nor n) end.
+intros. simpl. trivial. Qed.
+
+
+Lemma nor_Ps: forall n: bin, nor (Ps n) =  Ps (nor n).
+intros. simpl. trivial. Qed.
+
+Theorem nor_or_o: forall n: bin,  ((nor (Ps n) = Ps (nor n)) /\ (nor (Po n) = Po (nor n))) \/ (nor n) = Ob.
+intros. induction n. simpl. right. trivial. destruct IHn. left. destruct H. split.
+rewrite nor_Ps. rewrite H0. trivial. rewrite nor_Po. rewrite H0. trivial. right.
+simpl. rewrite H. trivial. destruct IHn. destruct H. left. split. rewrite nor_Ps. rewrite H. trivial.
+rewrite nor_Po. rewrite H. trivial. left. split. rewrite nor_Ps. rewrite nor_Ps. trivial. rewrite nor_Po.
+rewrite nor_Ps. trivial. Qed. 
+
+
+Theorem bin_to_nat_nor: forall n: bin, bin_to_nat n = bin_to_nat (nor n).
+intros. induction n. trivial. destruct (nor_or_o n). destruct H. rewrite H0.
+simpl. rewrite IHn. trivial.  rewrite nor_Po. rewrite H. rewrite H in IHn. 
+simpl. rewrite IHn. simpl. trivial. destruct (nor_or_o n). destruct H.
+rewrite H. simpl. rewrite IHn. trivial.  rewrite nor_Ps. rewrite H.  simpl. 
+rewrite IHn. rewrite H. trivial. Qed.
+
+Theorem nat_to_bin_2: forall n: nat, nat_to_bin (n * 2) = Po (nat_to_bin n) \/ n = 0.
+intros. induction n. right. trivial. destruct IHn. simpl. rewrite H. simpl. left. trivial.
+left. rewrite H. trivial. Qed.
+
+
+Theorem nat_to_bin_2_1: forall n: nat, nat_to_bin (n * 2 + 1) = Ps (nat_to_bin n) \/ n = 0.
+intros. induction n. right. trivial. destruct IHn. simpl. rewrite H. simpl. left. trivial.
+left. rewrite H. trivial. Qed.
+
+Theorem bin_to_nat_to_bin: forall n: bin, (nor n) = nat_to_bin (bin_to_nat n).
+intros. induction n. trivial. destruct (nor_or_o n). destruct H. rewrite H0.
+simpl. destruct (nat_to_bin_2 (bin_to_nat n)). rewrite H1. rewrite IHn. trivial.
+rewrite H1 in IHn. simpl in IHn. rewrite <- H0. rewrite H1. simpl. rewrite IHn. trivial.
+ simpl. rewrite H. destruct (nat_to_bin_2 (bin_to_nat n)). rewrite bin_to_nat_nor in H0. 
+rewrite H in H0. simpl in H0. inversion H0. rewrite H0. trivial. simpl. rewrite IHn. 
+destruct (nat_to_bin_2_1 (bin_to_nat n)). rewrite H. trivial. rewrite H. trivial. Qed.
+
+
 (** [] *)
 
 (* ###################################################################### *)

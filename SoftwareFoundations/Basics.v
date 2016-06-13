@@ -334,6 +334,7 @@ Inductive nat : Type :=
   | S : nat -> nat.
 
 
+
 (** The clauses of this definition can be read:
       - [O] is a natural number (note that this is the letter "[O],"
         not the numeral "[0]").
@@ -1250,10 +1251,10 @@ Fixpoint nor(n: bin) : bin := match n with
   | Ps n => Ps (nor n)
 end.
 
-Definition incr (n: bin): bin := match (nor n) with
+Fixpoint incr (n: bin): bin := match n with
   | Ob => Ps Ob
   | Po n =>  Ps n
-  | Ps n => Po (Ps n)
+  | Ps n => Po (incr n)
 end.
 
 Fixpoint bin_to_nat (n: bin) : nat := match n with 
