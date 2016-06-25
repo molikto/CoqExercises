@@ -147,7 +147,8 @@ Qed.
 Example and_exercise :
   forall n m : nat, n + m = 0 -> n = 0 /\ m = 0.
 Proof.
-  (* FILL IN HERE *) Admitted.
+Abort.
+
 (** [] *)
 
 (** So much for proving conjunctive statements.  To go in the other
@@ -221,8 +222,7 @@ Proof.
 Lemma proj2 : forall P Q : Prop,
   P /\ Q -> Q.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+intros P Q [HP HQ]. apply HQ. Qed.
 
 (** Finally, we sometimes need to rearrange the order of conjunctions
     and/or the grouping of conjuncts in multi-way conjunctions.  The
@@ -248,8 +248,7 @@ Theorem and_assoc : forall P Q R : Prop,
   P /\ (Q /\ R) -> (P /\ Q) /\ R.
 Proof.
   intros P Q R [HP [HQ HR]].
-(* FILL IN HERE *) Admitted.
-(** [] *)
+split. split. trivial. trivial. trivial. Qed.
 
 (** By the way, the infix notation [/\] is actually just syntactic
     sugar for [and A B].  That is, [and] is a Coq operator that takes
@@ -317,15 +316,12 @@ Qed.
 Lemma mult_eq_0 :
   forall n m, n * m = 0 -> n = 0 \/ m = 0.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+intros. destruct n, m. left. trivial. left. trivial. right. trivial. simpl in H. inversion H. Qed. 
 
 (** **** Exercise: 1 star (or_commut)  *)
 Theorem or_commut : forall P Q : Prop,
   P \/ Q  -> Q \/ P.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. destruct H. right. trivial. left. trivial. Qed.
 
 (** ** Falsehood and Negation *)
 
@@ -377,9 +373,7 @@ Proof.
 
 Fact not_implies_our_not : forall (P:Prop),
   ~ P -> (forall (Q:Prop), P -> Q).
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. set (H H0). inversion f. Qed.
 
 (** This is how we use [not] to state that [0] and [1] are different
     elements of [nat]: *)
@@ -438,15 +432,13 @@ Proof.
 (** **** Exercise: 2 stars, recommended (contrapositive)  *)
 Theorem contrapositive : forall P Q : Prop,
   (P -> Q) -> (~Q -> ~P).
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. unfold not. intros. set (H0 (H H1)). inversion f. Qed.
 
 (** **** Exercise: 1 star (not_both_true_and_false)  *)
 Theorem not_both_true_and_false : forall P : Prop,
   ~ (P /\ ~P).
 Proof.
-  (* FILL IN HERE *) Admitted.
+intros. unfold not. intros. destruct H. set (H0 H). inversion f. Qed.
 (** [] *)
 
 (** **** Exercise: 1 star, advanced (informal_not_PNP)  *)
@@ -548,21 +540,21 @@ Qed.
 
 Theorem iff_refl : forall P : Prop,
   P <-> P.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. unfold iff. split. trivial. trivial. Qed.
 
 Theorem iff_trans : forall P Q R : Prop,
   (P <-> Q) -> (Q <-> R) -> (P <-> R).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+intros. destruct H. destruct H0. unfold iff. split. intros. apply H0. apply H. trivial.
+intros. apply H1. apply H2. trivial. Qed. 
 
 (** **** Exercise: 3 stars (or_distributes_over_and)  *)
 Theorem or_distributes_over_and : forall P Q R : Prop,
   P \/ (Q /\ R) <-> (P \/ Q) /\ (P \/ R).
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. split. intros. split. destruct H. left. trivial. right. destruct H. trivial.
+destruct H. left. trivial. right. destruct H. trivial. intros. destruct H. destruct H. left.
+trivial. destruct H0. left. trivial. right. split. trivial. trivial. Qed.
+
 
 (** Some of Coq's tactics treat [iff] statements specially, avoiding
     the need for some low-level proof-state manipulation.  In
