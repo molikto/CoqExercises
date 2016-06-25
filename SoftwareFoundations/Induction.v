@@ -15,8 +15,8 @@ Require Export Basics.
          Open [Basics.v].  In the "Compile" menu, click on "Compile
          Buffer".
 
-     - From the command line:
-
+(*      - From the command line:
+ *)
          Run [coqc Basics.v]
 
     *)

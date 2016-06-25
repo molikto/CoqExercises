@@ -77,8 +77,7 @@ Theorem silly_ex :
      evenb 3 = true ->
      oddb 4 = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+intros. apply H. apply H0. Qed.
 
 (** To use the [apply] tactic, the (conclusion of the) fact
     being applied must match the goal exactly -- for example, [apply]
@@ -115,9 +114,7 @@ Proof.
 Theorem rev_exercise1 : forall (l l' : list nat),
      l = rev l' ->
      l' = rev l.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. rewrite H. symmetry. apply rev_involutive. Qed.
 
 (** **** Exercise: 1 star, optional (apply_rewrite)  *)
 (** Briefly explain the difference between the tactics [apply] and
@@ -182,9 +179,7 @@ Example trans_eq_exercise : forall (n m o p : nat),
      m = (minustwo o) ->
      (n + p) = m ->
      (n + p) = (minustwo o).
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. apply trans_eq with m. apply H0. apply H. Qed.
 
 (* ###################################################### *)
 (** * The [inversion] Tactic *)
@@ -257,9 +252,7 @@ Example inversion_ex3 : forall (X : Type) (x y z : X) (l j : list X),
   x :: y :: l = z :: j ->
   y :: l = x :: j ->
   x = y.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. inversion H. symmetry. inversion H0. rewrite H2. trivial. Qed.
 
 (** While the injectivity of constructors allows us to reason
     that [forall (n m : nat), S n = S m -> n = m], the converse of
@@ -331,9 +324,7 @@ Example inversion_ex6 : forall (X : Type)
   x :: y :: l = [] ->
   y :: l = z :: j ->
   x = z.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. inversion H. Qed.
 
 (** To summarize this discussion, suppose [H] is a hypothesis in the
     context or a previously proven lemma of the form
@@ -414,7 +405,11 @@ Theorem plus_n_n_injective : forall n m,
      n = m.
 Proof.
   intros n. induction n as [| n'].
-    (* FILL IN HERE *) Admitted.
+intros. simpl in H. induction m. trivial. simpl in H. inversion H. intros.
+rewrite <- plus_n_Sm in H. simpl in H. destruct m. simpl in H. inversion H. 
+set (IHn' m).  simpl in H. rewrite <- plus_n_Sm in H. inversion H. apply e in H1.
+rewrite H1. trivial. Qed.
+
 (** [] *)
 
 (* ###################################################### *)
@@ -570,9 +565,8 @@ Proof.
 (** **** Exercise: 2 stars (beq_nat_true)  *)
 Theorem beq_nat_true : forall n m,
     beq_nat n m = true -> n = m.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. induction n. simpl. induction m. trivial. intros. inversion H. 
+simpl. intros. destruct m. inversion H. apply IHn in H. rewrite H. trivial. Qed.
 
 (** **** Exercise: 2 stars, advanced (beq_nat_true_informal)  *)
 (** Give a careful informal proof of [beq_nat_true], being as explicit
@@ -695,9 +689,9 @@ Qed.
 Theorem nth_error_after_last: forall (n : nat) (X : Type) (l : list X),
      length l = n ->
      nth_error l n = None.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. generalize dependent n. induction l. intros. simpl in H. rewrite <- H. trivial.
+intros. simpl in H. destruct n. inversion H. apply IHl. simpl. inversion H. trivial. Qed.
+
 
 (** **** Exercise: 3 stars, optional (app_length_cons)  *)
 (** Prove this by induction on [l1], without using [app_length]
@@ -707,9 +701,9 @@ Theorem app_length_cons : forall (X : Type) (l1 l2 : list X)
                                   (x : X) (n : nat),
      length (l1 ++ (x :: l2)) = n ->
      S (length (l1 ++ l2)) = n.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. generalize dependent n. induction l1. intros. simpl. 
+simpl in H. trivial. destruct n. simpl. intros. inversion H. simpl.
+intros. inversion H. set (IHl1 n H1).  rewrite H1. rewrite e. trivial. Qed.
 
 (** **** Exercise: 4 stars, optional (app_length_twice)  *)
 (** Prove this by induction on [l], without using [app_length] from [Lists]. *)
@@ -717,9 +711,9 @@ Proof.
 Theorem app_length_twice : forall (X:Type) (n:nat) (l:list X),
      length l = n ->
      length (l ++ l) = n + n.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. generalize dependent n. induction l. intros. simpl. simpl in H. rewrite<-  H.
+trivial. intros. destruct n. simpl in H. inversion H. simpl. rewrite app_length. simpl in H.
+inversion H. simpl. rewrite H1. trivial. Qed. 
 
 (** **** Exercise: 3 stars, optional (double_induction)  *)
 (** Prove the following principle of induction over two naturals. *)
@@ -730,9 +724,10 @@ Theorem double_induction: forall (P : nat -> nat -> Prop),
   (forall n, P 0 n -> P 0 (S n)) ->
   (forall m n, P m n -> P (S m) (S n)) ->
   forall m n, P m n.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. generalize dependent m. induction n. induction m. trivial.  apply H0. trivial.
+destruct m.  apply H1. apply IHn. apply H2. apply IHn. Qed.
+
+
 
 (* ###################################################### *)
 (** * Unfolding Definitions *)
@@ -894,12 +889,20 @@ Proof.
     are replaced by [c]. *)
 
 (** **** Exercise: 3 stars, optional (combine_split)  *)
+
 Theorem combine_split : forall X Y (l : list (X * Y)) l1 l2,
   split l = (l1, l2) ->
   combine l1 l2 = l.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. generalize dependent l1. generalize dependent l2.
+induction l. intros. simpl in H. inversion H. trivial.
+intros. destruct l1. simpl in H. destruct (split l). inversion H. 
+destruct l2. simpl in H.  destruct (split l). inversion H. simpl.
+simpl in H. destruct (split l). inversion H. rewrite H1. rewrite H3.
+set (IHl l2 l1). assert (combine l1 l2 = l). apply e. rewrite H2.
+rewrite H4. trivial. rewrite H0. assert ((x0, y) = x).
+rewrite <- H1. rewrite <- H3. destruct x. simpl. trivial. rewrite H5.
+trivial. Qed. 
+
 
 (** However, [destruct]ing compound expressions requires a bit of
     care, as such [destruct]s can sometimes erase information we need
@@ -910,7 +913,7 @@ Proof.
 Definition sillyfun1 (n : nat) : bool :=
   if beq_nat n 3 then true
   else if beq_nat n 5 then true
-  else false.
+  else false. 
 
 (** Now suppose that we want to convince Coq of the (rather
     obvious) fact that [sillyfun1 n] yields [true] only when [n] is

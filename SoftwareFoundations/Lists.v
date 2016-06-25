@@ -101,16 +101,12 @@ Proof.
 (** **** Exercise: 1 star (snd_fst_is_swap)  *)
 Theorem snd_fst_is_swap : forall (p : natprod),
   (snd p, fst p) = swap_pair p.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. destruct p. simpl. trivial. Qed.
 
 (** **** Exercise: 1 star, optional (fst_swap_is_snd)  *)
 Theorem fst_swap_is_snd : forall (p : natprod),
   fst (swap_pair p) = snd p.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. destruct p. simpl. trivial. Qed.
 
 (* ###################################################### *)
 (** * Lists of Numbers *)
@@ -254,33 +250,43 @@ Proof. reflexivity.  Qed.
     what these functions should do. *)
 
 Fixpoint nonzeros (l:natlist) : natlist :=
-  (* FILL IN HERE *) admit.
+match l with
+  | [] => []
+  | 0 :: l0 => nonzeros l0
+  | a :: l0 => a :: (nonzeros l0)
+end.
 
 Example test_nonzeros:
   nonzeros [0;1;0;2;3;0;0] = [1;2;3].
-  (* FILL IN HERE *) Admitted.
+simpl. trivial. Qed. 
 
 Fixpoint oddmembers (l:natlist) : natlist :=
-  (* FILL IN HERE *) admit.
+match l with
+  | [] => []
+  | a :: l0 => match (oddb a) with |  true => a :: (oddmembers l0) | false => oddmembers l0 end
+end.
 
 Example test_oddmembers:
   oddmembers [0;1;0;2;3;0;0] = [1;3].
-  (* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 
 Fixpoint countoddmembers (l:natlist) : nat :=
-  (* FILL IN HERE *) admit.
+match l with
+  | [] => 0
+  | a :: l0 => match (oddb a) with |  true => 1 + (countoddmembers l0) | false => countoddmembers l0 end
+end.
 
 Example test_countoddmembers1:
   countoddmembers [1;0;3;1;4;5] = 4.
-  (* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 
 Example test_countoddmembers2:
   countoddmembers [0;2;4] = 0.
-  (* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 
 Example test_countoddmembers3:
   countoddmembers nil = 0.
-  (* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced (alternate)  *)
@@ -297,23 +303,26 @@ Example test_countoddmembers3:
     defining a new kind of pairs, but this is not the only way.)  *)
 
 Fixpoint alternate (l1 l2 : natlist) : natlist :=
-  (* FILL IN HERE *) admit.
+match l1 with 
+| [] => l2
+| h1 :: t1 => match l2 with | [] => h1 :: t1 | h2 :: t2 => h1 :: h2 :: (alternate t1 t2) end
+end.
 
 Example test_alternate1:
   alternate [1;2;3] [4;5;6] = [1;4;2;5;3;6].
-  (* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 
 Example test_alternate2:
   alternate [1] [4;5;6] = [1;4;5;6].
-  (* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 
 Example test_alternate3:
   alternate [1;2;3] [4] = [1;4;2;3].
-  (* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 
 Example test_alternate4:
   alternate [] [20;30] = [20;30].
-  (* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 (** [] *)
 
 (* ###################################################### *)
@@ -330,14 +339,17 @@ Definition bag := natlist.
     [count], [sum], [add], and [member] for bags. *)
 
 Fixpoint count (v:nat) (s:bag) : nat :=
-  (* FILL IN HERE *) admit.
+match s with 
+| h :: t => match (beq_nat v h) with | true => 1 + (count v t) | false => (count v t) end
+| [] => 0
+end.
 
 (** All these proofs can be done just by [reflexivity]. *)
 
 Example test_count1:              count 1 [1;2;3;1;4;1] = 3.
- (* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 Example test_count2:              count 6 [1;2;3;1;4;1] = 0.
- (* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 
 (** Multiset [sum] is similar to set [union]: [sum a b] contains
     all the elements of [a] and of [b].  (Mathematicians usually
@@ -351,29 +363,26 @@ Example test_count2:              count 6 [1;2;3;1;4;1] = 0.
     think about whether [sum] can be implemented in another way --
     perhaps by using functions that have already been defined.  *)
 
-Definition sum : bag -> bag -> bag :=
-  (* FILL IN HERE *) admit.
+Definition sum : bag -> bag -> bag := alternate.
 
 Example test_sum1:              count 1 (sum [1;2;3] [1;4;1]) = 3.
- (* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 
-Definition add (v:nat) (s:bag) : bag :=
-  (* FILL IN HERE *) admit.
+Definition add (v:nat) (s:bag) : bag := sum [v] s.
 
 Example test_add1:                count 1 (add 1 [1;4;1]) = 3.
- (* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 Example test_add2:                count 5 (add 1 [1;4;1]) = 0.
- (* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 
-Definition member (v:nat) (s:bag) : bool :=
-  (* FILL IN HERE *) admit.
+Definition member (v:nat) (s:bag) : bool := 
+match (count v s) with | 0 => false | _ => true end.
 
 Example test_member1:             member 1 [1;4;1] = true.
- (* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 
 Example test_member2:             member 2 [1;4;1] = false.
- (* FILL IN HERE *) Admitted.
-(** [] *)
+simpl. trivial. Qed.
 
 (** **** Exercise: 3 stars, optional (bag_more_functions)  *)
 (** Here are some more bag functions for you to practice with. *)

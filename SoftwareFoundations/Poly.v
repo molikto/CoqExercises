@@ -371,32 +371,41 @@ Definition list123''' := [1; 2; 3].
 
 Theorem app_nil_r : forall (X:Type), forall l:list X,
   l ++ [] = l.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. induction l. trivial. simpl. rewrite IHl. trivial. Qed.
 
 Theorem app_assoc : forall A (l m n:list A),
   l ++ m ++ n = (l ++ m) ++ n.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. induction l. simpl. trivial. simpl. rewrite IHl. trivial. Qed.
+
 
 Lemma app_length : forall (X:Type) (l1 l2 : list X),
   length (l1 ++ l2) = length l1 + length l2.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. induction l1. simpl. trivial. simpl. rewrite IHl1. trivial. Qed. 
 
 (** **** Exercise: 2 stars, optional (more_poly_exercises)  *)
 (** Here are some slightly more interesting ones... *)
 
+
+
 Theorem rev_app_distr: forall X (l1 l2 : list X),
   rev (l1 ++ l2) = rev l2 ++ rev l1.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. induction l1, l2. simpl. trivial. simpl. rewrite app_nil_r. trivial.
+simpl. rewrite app_nil_r. trivial. simpl. rewrite IHl1. simpl. rewrite app_assoc.
+trivial. Qed. 
+
 
 Theorem rev_involutive : forall X : Type, forall l : list X,
   rev (rev l) = l.
-Proof.
-  (* FILL IN HERE *) Admitted.
+Proof. intros. induction l. simpl. trivial. simpl. rewrite rev_app_distr. rewrite IHl.
+trivial. Qed.
+
+(** from previous section a 4 star problem **)
+
+Theorem rev_injective: forall X (l1 l2 : list X), rev l1 = rev l2 -> l1 = l2.
+intros. assert (rev (rev l1) = rev (rev l2)). rewrite H. trivial. rewrite rev_involutive in H0.
+rewrite rev_involutive in H0. trivial. Qed. 
+
+
 (** [] *)
 
 (* ###################################################### *)
@@ -477,13 +486,14 @@ Fixpoint combine {X Y : Type} (lx : list X) (ly : list Y)
 
 Fixpoint split {X Y : Type} (l : list (X*Y))
                : (list X) * (list Y) :=
-(* FILL IN HERE *) admit.
+match l with 
+| [] => ([], [])
+| a :: l => match (split l) with | (c, d) => ((fst a) ::c, (snd a) :: d) end
+end. 
 
 Example test_split:
   split [(1,false);(2,false)] = ([1;2],[false;false]).
-Proof.
-(* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. simpl. trivial. Qed.
 
 (* ###################################################### *)
 (** ** Polymorphic Options *)
@@ -521,7 +531,7 @@ Proof. reflexivity. Qed.
     passes the unit tests below. *)
 
 Definition hd_error {X : Type} (l : list X) : option X :=
-  (* FILL IN HERE *) admit.
+match l with | a:: _ => Some a | _ => None end.
 
 (** Once again, to force the implicit arguments to be explicit,
     we can use [@] before the name of the function. *)
@@ -529,9 +539,9 @@ Definition hd_error {X : Type} (l : list X) : option X :=
 Check @hd_error.
 
 Example test_hd_error1 : hd_error [1;2] = Some 1.
- (* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 Example test_hd_error2 : hd_error  [[1];[2]]  = Some [1].
- (* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 (** [] *)
 
 (* ###################################################### *)
@@ -649,15 +659,15 @@ Proof. reflexivity.  Qed.
     7. *)
 
 Definition filter_even_gt7 (l : list nat) : list nat :=
-  (* FILL IN HERE *) admit.
+filter (fun a => andb (blt_nat 7 a) (evenb a)) l.
 
 Example test_filter_even_gt7_1 :
   filter_even_gt7 [1;2;6;9;10;3;12;8] = [10;12;8].
- (* FILL IN HERE *) Admitted.
+Proof. unfold filter_even_gt7. simpl. trivial. Qed.
 
 Example test_filter_even_gt7_2 :
   filter_even_gt7 [5;2;6;19;129] = [].
- (* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars (partition)  *)
@@ -678,12 +688,12 @@ Definition partition {X : Type}
                      (test : X -> bool)
                      (l : list X)
                    : list X * list X :=
-(* FILL IN HERE *) admit.
+(filter test l, filter (fun a => negb (test a)) l).
 
 Example test_partition1: partition oddb [1;2;3;4;5] = ([1;3;5], [2;4]).
-(* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 Example test_partition2: partition (fun x => false) [5;9;0] = ([], [5;9;0]).
-(* FILL IN HERE *) Admitted.
+simpl. trivial. Qed.
 (** [] *)
 
 (* ###################################################### *)
@@ -728,12 +738,14 @@ Proof. reflexivity.  Qed.
 (** Show that [map] and [rev] commute.  You may need to define an
     auxiliary lemma. *)
 
+Theorem map_app : forall (X Y: Type) (f : X -> Y) (l j: list X),
+map f (l ++ j) = map f l ++ map f j.
+intros. induction l. simpl. trivial. simpl. rewrite IHl. trivial. Qed.
 
 Theorem map_rev : forall (X Y : Type) (f : X -> Y) (l : list X),
   map f (rev l) = rev (map f l).
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. induction l. simpl. trivial. simpl. rewrite <- IHl. rewrite map_app.
+simpl. trivial. Qed. 
 
 (** **** Exercise: 2 stars, recommended (flat_map)  *)
 (** The function [map] maps a [list X] to a [list Y] using a function
@@ -749,13 +761,14 @@ Proof.
 
 Fixpoint flat_map {X Y:Type} (f:X -> list Y) (l:list X)
                    : (list Y) :=
-  (* FILL IN HERE *) admit.
+match l with 
+| a :: l => (f a) ++ flat_map f l
+| [] => [] end.
 
 Example test_flat_map1:
   flat_map (fun n => [n;n;n]) [1;5;4]
   = [1; 1; 1; 5; 5; 5; 4; 4; 4].
- (* FILL IN HERE *) Admitted.
-(** [] *)
+trivial. Qed.
 
 (** Lists are not the only inductive type that we can write a
     [map] function for.  Here is the definition of [map] for the
