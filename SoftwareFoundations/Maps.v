@@ -33,6 +33,8 @@ Require Import Coq.Arith.Arith.
 Require Import Coq.Bool.Bool.
 Require Import Coq.Logic.FunctionalExtensionality.
 
+
+
 (** Documentation for the standard library can be found at
     http://coq.inria.fr/library/.  
 
@@ -174,9 +176,8 @@ Proof. reflexivity. Qed.
 
 Lemma t_update_eq : forall A (m: total_map A) x v,
   (t_update m x v) x = v.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. unfold t_update. set (beq_id_true_iff x x). destruct i.
+assert (beq_id x x = true). apply H0. trivial. rewrite H1. trivial. Qed.
 
 (** **** Exercise: 2 stars, optional (t_update_neq)  *)
 (** On the other hand, if we update a map [m] at a key [x1] and then

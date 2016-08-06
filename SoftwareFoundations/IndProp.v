@@ -289,13 +289,12 @@ Proof.
 Theorem SSSSev__even : forall n,
   ev (S (S (S (S n)))) -> ev n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+intros. inversion H. inversion H1. trivial. Qed.
 
 Theorem even5_nonsense :
   ev 5 -> 2 + 2 = 9.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+intros. inversion H. inversion H1. inversion H3. Qed.
 
 (** The way we've used [inversion] here may seem a bit
     mysterious at first.  Until now, we've only used [inversion] on
@@ -418,7 +417,7 @@ Qed.
 (** **** Exercise: 2 stars (ev_sum)  *)
 Theorem ev_sum : forall n m, ev n -> ev m -> ev (n + m).
 Proof.
-  (* FILL IN HERE *) Admitted.
+intros. induction H. trivial. simpl. apply ev_SS. trivial. Qed.
 (** [] *)
 
 (** **** Exercise: 4 stars, advanced (ev_alternate)  *)

@@ -443,13 +443,20 @@ Qed.
     as elegant as possible. *)
 
 Fixpoint optimize_0plus_b (b : bexp) : bexp :=
-  (* FILL IN HERE *) admit.
+match b with 
+| BEq a b => BEq (optimize_0plus a) (optimize_0plus b)
+| BLe a b => BLe (optimize_0plus a) (optimize_0plus b)
+| BNot b => BNot (optimize_0plus_b b)
+| BAnd a b => BAnd (optimize_0plus_b a) (optimize_0plus_b b)
+| a => a
+end.
+
 
 Theorem optimize_0plus_b_sound : forall b,
   beval (optimize_0plus_b b) = beval b.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. induction b; try trivial; try simpl; try repeat rewrite optimize_0plus_sound; try trivial; try repeat rewrite IHb; try trivial.
+rewrite IHb1. rewrite IHb2. trivial. Qed.
+
 
 (** **** Exercise: 4 stars, optional (optimizer)  *)
 (** _Design exercise_: The optimization implemented by our

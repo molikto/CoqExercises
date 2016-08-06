@@ -198,16 +198,6 @@ Qed.
     especially in bigger developments.  Here's a simplified
     example: *)
 
-Lemma and_example3 :
-  forall n m : nat, n + m = 0 -> n * m = 0.
-Proof.
-  intros n m H.
-  assert (H' : n = 0 /\ m = 0).
-  { apply and_exercise. apply H. }
-  destruct H' as [Hn Hm].
-  rewrite Hn. reflexivity.
-Qed.
-
 (** Another common situation with conjunctions is that we know [A /\
     B] but in some context we need just [A] (or just [B]).  The
     following lemmas are useful in such cases: *)
@@ -652,8 +642,7 @@ Proof.
 Theorem dist_not_exists : forall (X:Type) (P : X -> Prop),
   (forall x, P x) -> ~ (exists x, ~ P x).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+intros. unfold not. intros. destruct H0. set (H x). exact (H0 p). Qed.
 
 (** **** Exercise: 2 stars (dist_exists_or)  *)
 (** Prove that existential quantification distributes over
@@ -662,8 +651,8 @@ Proof.
 Theorem dist_exists_or : forall (X:Type) (P Q : X -> Prop),
   (exists x, P x \/ Q x) <-> (exists x, P x) \/ (exists x, Q x).
 Proof.
-   (* FILL IN HERE *) Admitted.
-(** [] *)
+intros. split. intros. destruct H. destruct H. left. exists x. trivial. right.
+exists x. trivial.
 
 (* #################################################################### *)
 (** * Programming with Propositions *)
@@ -689,7 +678,8 @@ Fixpoint In {A : Type} (x : A) (l : list A) : Prop :=
   match l with
   | [] => False
   | x' :: l' => x' = x \/ In x l'
-  end.
+  end. intros. destruct H. destruct H. exists x. left. trivial.
+destruct H. exists x. right. trivial. Qed.
 
 (** When [In] is applied to a concrete list, it expands into a
     concrete sequence of nested conjunctions. *)
@@ -745,15 +735,25 @@ Lemma In_map_iff :
     In y (map f l) <->
     exists x, f x = y /\ In x l.
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+intros. split. intros. induction l. simpl in H. destruct H. 
+simpl in H. destruct H. exists x. split. trivial. simpl. left.
+trivial. set (IHl H). destruct e. exists x0. simpl. split. destruct H0.
+trivial. destruct H0. right. trivial. intros.
+destruct H. destruct H. induction l. simpl in H0. destruct H0.
+simpl in H0. destruct H0. simpl. left. rewrite <- H0 in H. trivial.
+simpl.  set (IHl H0). right. trivial. Qed.
 
 (** **** Exercise: 2 stars (in_app_iff)  *)
 Lemma in_app_iff : forall A l l' (a:A),
   In a (l++l') <-> In a l \/ In a l'.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof.  intros. split. intros. induction l. simpl in H. right.
+trivial. simpl in H. simpl. destruct H.  left. left. trivial.
+set (IHl H). destruct o. left. right. trivial. right. trivial.
+intros. induction l. simpl. destruct H. simpl in H. destruct H.
+trivial. simpl. destruct H. simpl in H. destruct H. left. trivial. right.
+assert (In a l \/ In a l'). left. trivial. set (IHl H0). trivial.
+right. assert (In a l \/ In a l'). right. trivial. set (IHl H0).
+trivial. Qed.
 
 (** **** Exercise: 3 stars (All)  *)
 (** Recall that functions returning propositions can be seen as
@@ -1036,7 +1036,14 @@ Definition tr_rev {X} (l : list X) : list X :=
 
 
 Lemma tr_rev_correct : forall X, @tr_rev X = @rev X.
-(* FILL IN HERE *) Admitted.
+assert (forall X, forall l k: list X, rev_append l k = rev l ++ k).
+intros. generalize k.  induction l. intros. trivial.
+intros. set (IHl (x :: k)).  simpl. rewrite <- app_assoc. simpl.
+trivial. intros. apply functional_extensionality. intros.
+set (H X x []). rewrite app_nil_r in e. unfold tr_rev. trivial. Qed.
+
+
+
 (** [] *)
 
 (** ** Propositions and Booleans *)
@@ -1386,6 +1393,12 @@ Proof.
     Prove that all five propositions (these four plus
     [excluded_middle]) are equivalent. *)
 
+
+(** 
+
+already done before
+
+**)
 Definition peirce := forall P Q: Prop,
   ((P->Q)->P)->P.
 
