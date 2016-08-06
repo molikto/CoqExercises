@@ -639,6 +639,8 @@ Inductive aevalR : aexp -> nat -> Prop :=
 
   where "e '\\' n" := (aevalR e n) : type_scope.
 
+
+
 (* ####################################################### *)
 (** ** Inference Rule Notation *)
 
@@ -763,11 +765,43 @@ Qed.
 (** Write a relation [bevalR] in the same style as
     [aevalR], and prove that it is equivalent to [beval].*)
 
-(* 
-Inductive bevalR:
-(* FILL IN HERE *)
-*)
+Reserved Notation "e '\\\' b" (at level 50, left associativity).
+
+Inductive bevalR: bexp -> bool -> Prop :=
+  | E_BTrue : BTrue \\\ true
+  | E_BFalse: BFalse \\\ false
+  | E_BEq: forall (a b: aexp) (n1 n2 : nat), (a \\ n1) -> (b \\ n2) -> (BEq a b) \\\ (beq_nat n1 n2)
+  | E_BLe: forall (a b: aexp) (n1 n2 : nat), (a \\ n1) -> (b \\ n2) -> (BLe a b) \\\ (leb n1 n2)
+  | E_BNot: forall (a: bexp) (b: bool), (a \\\ b) -> (BNot a) \\\ (negb b)
+  | E_BAnd: forall (a b : bexp) (c d: bool), (a \\\ c) -> (b \\\ d) -> (BAnd a b) \\\ (andb c d)
+  
+  where "e '\\\' b" := (bevalR e b) : type_scope.
 (** [] *)
+
+
+Theorem beval_iff_bevalR : forall a n,
+  (a \\\ n) <-> beval a = n.
+Proof. intros. split. intros. induction H. trivial. trivial. simpl. apply aeval_iff_aevalR in H.
+apply aeval_iff_aevalR in H0. rewrite H. rewrite H0. trivial. apply aeval_iff_aevalR in H.
+apply aeval_iff_aevalR in H0. simpl. rewrite H. rewrite H0. trivial. simpl. rewrite IHbevalR. trivial.
+simpl. rewrite IHbevalR1. rewrite IHbevalR2. trivial. generalize n. clear n. induction a. intros. simpl in H. rewrite <- H.
+constructor. intros. simpl in H. rewrite <- H. constructor. intros. simpl in H. rewrite <- H. constructor. 
+apply aeval_iff_aevalR. trivial. apply aeval_iff_aevalR. trivial. intros. simpl in H. rewrite <- H.
+constructor. apply aeval_iff_aevalR. trivial. apply aeval_iff_aevalR. trivial. intros. rewrite <- H.
+simpl.  simpl in H. assert ((beval a) = (negb n)).  rewrite <- H. rewrite negb_involutive. trivial.
+ constructor. rewrite H0. apply IHa in H0. trivial. intros. simpl in H. induction n. assert (forall a b, a && b = true -> a = true /\ b = true).
+intros. destruct a, b. split; trivial. simpl in H0; destruct H0. split; trivial.  simpl in H0; destruct H0.
+ split; trivial. simpl in H0; destruct H0. split; trivial. apply H0 in H. destruct H.
+apply IHa1 in H. apply IHa2 in H1. set (E_BAnd a1 a2 true true H H1). simpl in b. trivial.
+assert (forall a b, a && b = false -> a = false \/ b = false). intros. 
+destruct a. right. destruct b. simpl in H0. destruct H0. trivial. trivial. left. trivial.
+apply H0 in H. destruct H. apply IHa1 in H. destruct (beval a2). assert (a2 \\\ true).
+apply IHa2. trivial.
+ (set (E_BAnd a1 a2 false true H H1)). trivial. assert (a2 \\\ false). apply IHa2.
+trivial.  (set (E_BAnd a1 a2 false false H H1)). trivial. apply IHa2 in H. destruct (beval a1).
+assert (a1 \\\ true). apply IHa1. trivial. set (E_BAnd a1 a2 true false H1 H). trivial.
+assert (a1 \\\ false). apply IHa1. trivial. set (E_BAnd a1 a2 false false H1 H). trivial.
+Qed.
 
 End AExp.
 
@@ -1257,9 +1291,8 @@ Proof.
 Example ceval_example2:
     (X ::= ANum 0;; Y ::= ANum 1;; Z ::= ANum 2) / empty_state \\
     (t_update (t_update (t_update empty_state X 0) Y 1) Z 2).
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. repeat eapply E_Seq; eapply E_Ass; simpl; exists. Qed.
+
 
 (** **** Exercise: 3 stars, advanced (pup_to_n)  *)
 (** Write an Imp program that sums the numbers from [1] to
@@ -1267,17 +1300,48 @@ Proof.
    Prove that this program executes as intended for [X] = [2]
    (the latter is trickier than you might expect). *)
 
-Definition pup_to_n : com :=
-  (* FILL IN HERE *) admit.
 
+Definition K : id := Id 3.
+
+Definition pup_to_n : com := 
+WHILE BLe (ANum 1) (AId X) DO (Y ::= (APlus (AId Y) (AId X));; X ::= (AMinus (AId X) (ANum 1))) END.
+
+Require Import Coq.Logic.FunctionalExtensionality.
 Theorem pup_to_2_ceval :
   pup_to_n / (t_update empty_state X 2) \\
     t_update (t_update (t_update (t_update (t_update (t_update empty_state
       X 2) Y 0) Y 2) X 1) Y 3) X 0.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. 
+eapply E_WhileLoop. simpl. trivial. eapply E_Seq. simpl. eapply E_Ass.
+simpl. trivial. eapply E_Ass. simpl. trivial. 
+eapply E_WhileLoop. simpl. trivial. eapply E_Seq. simpl. eapply E_Ass.
+simpl. trivial. eapply E_Ass. simpl. exists. 
+simpl. 
 
+assert ((t_update (t_update (t_update (t_update (t_update empty_state X 2) Y 2) X 1) Y 3) X 0) = (t_update
+  (t_update (t_update (t_update (t_update (t_update empty_state X 2) Y 0) Y 2) X 1) Y
+     3) X 0)).
+simpl. apply functional_extensionality. unfold X. unfold Y. unfold Z. destruct x.
+destruct n. simpl. unfold t_update. trivial. 
+destruct n. simpl. unfold t_update. trivial.
+
+assert (Id 0 <> Id (S (S n))). unfold not. intros. inversion H. 
+assert (Id 1 <> Id (S (S n))). unfold not. intros. inversion H0. 
+ assert (t_update
+  (t_update (t_update (t_update (t_update empty_state (Id 0) 2) (Id 1) 2) (Id 0) 1)
+     (Id 1) 3) (Id 0) 0 (Id (S (S n))) = 0). 
+
+apply t_update_neq. trivial. 
+
+assert ((t_update
+  (t_update
+     (t_update
+        (t_update (t_update (t_update empty_state (Id 0) 2) (Id 1) 0) (Id 1) 2)
+        (Id 0) 1) (Id 1) 3) (Id 0) 0 (Id (S (S n)))) = 0).
+
+
+apply t_update_neq. trivial. rewrite H1. rewrite H2. trivial. rewrite H. 
+eapply E_WhileEnd. simpl. trivial. Qed.
 
 (* ####################################################### *)
 (** ** Determinism of Evaluation *)
@@ -1365,16 +1429,12 @@ Theorem loop_never_stops : forall st st',
   ~(loop / st \\ st').
 Proof.
   intros st st' contra. unfold loop in contra.
-  remember (WHILE BTrue DO SKIP END) as loopdef
-           eqn:Heqloopdef.
+  remember (WHILE BTrue DO SKIP END) as ld
+           eqn:Hld. induction contra; inversion Hld. rewrite H1 in H. simpl in H.
+inversion H. subst c. subst b. clear H. apply IHcontra2. trivial. Qed.
 
-  (** Proceed by induction on the assumed derivation showing that
-      [loopdef] terminates.  Most of the cases are immediately
-      contradictory (and so can be solved in one step with
-      [inversion]). *)
 
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+
 
 (** **** Exercise: 3 stars (no_whilesR)  *)
 (** Consider the definition of the [no_whiles] boolean predicate below: *)
@@ -1399,22 +1459,38 @@ Fixpoint no_whiles (c : com) : bool :=
     while loops.  Then prove its equivalence with [no_whiles]. *)
 
 Inductive no_whilesR: com -> Prop :=
- (* FILL IN HERE *)
-.
+ | NW_SKIP: no_whilesR SKIP
+ | NW_ASS: forall a b, no_whilesR (a ::= b)
+ | NW_SEQ: forall a b, (no_whilesR a) -> (no_whilesR b) -> (no_whilesR (a ;; b))
+   | N_IFB: forall b ct cf, no_whilesR ct -> no_whilesR cf -> no_whilesR (IFB b THEN ct ELSE cf FI).
+
+
 
 Theorem no_whiles_eqv:
    forall c, no_whiles c = true <-> no_whilesR c.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. split. induction c; try constructor; try apply IHc1; try apply IHc2; try (inversion H; apply andb_true_iff in H1;
+destruct H1; rewrite H1; rewrite H0; simpl; trivial). intros.
+simpl in H. inversion H. induction c; intros; trivial; try ( inversion H; apply IHc1 in H2; apply IHc2 in H3; simpl; rewrite H2; rewrite H3; simpl; trivial).
+inversion H. apply IHc1 in H2. apply IHc2 in H4. simpl. rewrite H2. rewrite H4. trivial. Qed.
+
 
 (** **** Exercise: 4 stars (no_whiles_terminating)  *)
 (** Imp programs that don't involve while loops always terminate.
     State and prove a theorem [no_whiles_terminating] that says this. *)
 (** Use either [no_whiles] or [no_whilesR], as you prefer. *)
 
-(* FILL IN HERE *)
-(** [] *)
+Theorem no_whiles_terminate:
+  forall c, no_whilesR c -> forall st, exists st', c / st \\ st'.
+Proof. intros. generalize st. clear st. induction c. intros. exists st. constructor.
+intros. exists (t_update st i (aeval st a)).
+eapply E_Ass. trivial.
+intros. inversion H. set (IHc1 H2 st). inversion e. set (IHc2 H3 x). inversion e0.
+eexists. econstructor. eexact H4. eexact H5.
+intros. inversion H. set (IHc1 H2 st). inversion e. set (IHc2 H4 st). inversion e0.
+ remember (beval st b). destruct b1. eexists. eapply E_IfTrue. rewrite <- Heqb1. trivial.
+eexact H5. eexists. eapply E_IfFalse. rewrite <- Heqb1. trivial. eexact H6. 
+inversion H. Qed.
+
 
 (* ####################################################### *)
 (** * Additional Exercises *)
@@ -1722,3 +1798,5 @@ End BreakImp.
 
 (* $Date: 2016-05-26 16:17:19 -0400 (Thu, 26 May 2016) $ *)
 
+
+(** TODO **)

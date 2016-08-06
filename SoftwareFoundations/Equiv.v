@@ -194,9 +194,8 @@ Theorem skip_right: forall c,
   cequiv
     (c ;; SKIP)
     c.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros c st st0. split. intros. inversion H. subst. inversion H5. subst. trivial.
+intros. eapply E_Seq. eexact H. apply E_Skip. Qed.
 
 (** Similarly, here is a simple transformations that optimizes [IFB]
     commands: *)
@@ -283,9 +282,9 @@ Theorem IFB_false: forall b c1 c2,
   cequiv
     (IFB b THEN c1 ELSE c2 FI)
     c2.
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. unfold cequiv. intros. unfold bequiv in H. split.
+intros. inversion H0. subst. set (H st). rewrite e in H6. simpl in H6. inversion H6.
+subst. trivial. intros. eapply E_IfFalse. apply H. trivial. Qed.
 
 (** **** Exercise: 3 stars (swap_if_branches)  *)
 (** Show that we can swap the branches of an IF by negating its
@@ -295,9 +294,11 @@ Theorem swap_if_branches: forall b e1 e2,
   cequiv
     (IFB b THEN e1 ELSE e2 FI)
     (IFB BNot b THEN e2 ELSE e1 FI).
-Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
+Proof. intros. unfold cequiv. intros. split.
+intros. inversion H. subst. eapply E_IfFalse. simpl. rewrite H5. trivial. trivial.
+subst. eapply E_IfTrue. simpl. rewrite H5. trivial. trivial. intros. inversion H.
+subst. simpl in H5. eapply E_IfFalse. apply negb_true_iff in H5. trivial. trivial.
+subst. simpl in H5. apply negb_false_iff in H5. eapply E_IfTrue. trivial. trivial. Qed. 
 
 (** For [WHILE] loops, we can give a similar pair of theorems.  A loop
     whose guard is equivalent to [BFalse] is equivalent to [SKIP],
@@ -662,8 +663,6 @@ Theorem CIf_congruence : forall b b' c1 c1' c2 c2',
   cequiv (IFB b THEN c1 ELSE c2 FI)
          (IFB b' THEN c1' ELSE c2' FI).
 Proof.
-  (* FILL IN HERE *) Admitted.
-(** [] *)
 
 (** For example, here are two equivalent programs and a proof of their
     equivalence... *)
