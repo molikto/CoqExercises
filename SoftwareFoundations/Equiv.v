@@ -663,9 +663,18 @@ Theorem CIf_congruence : forall b b' c1 c1' c2 c2',
   cequiv (IFB b THEN c1 ELSE c2 FI)
          (IFB b' THEN c1' ELSE c2' FI).
 Proof.
-
-(** For example, here are two equivalent programs and a proof of their
-    equivalence... *)
+assert (forall b b' c1 c1' c2 c2',
+  bequiv b b' -> cequiv c1 c1' -> cequiv c2 c2' ->
+  forall st st', (IFB b THEN c1 ELSE c2 FI) / st \\ st' ->
+         (IFB b' THEN c1' ELSE c2' FI) / st \\ st').
+ unfold cequiv. unfold bequiv. intros. intros. remember (beval st b).
+destruct b0. set  Heqb0. set (H st). rewrite <- Heqb0 in e0.  eapply E_IfTrue. 
+rewrite <- e0. trivial. inversion H2. subst. rewrite H0 in H9. trivial. subst. set (H st).
+rewrite H8 in e1. rewrite <- e0 in e1. inversion e1. eapply E_IfFalse.
+set (H st). rewrite <- Heqb0 in e. rewrite e. trivial. inversion H2. subst. rewrite H8 in Heqb0.
+inversion Heqb0. subst. rewrite H1 in H9. trivial. intros. unfold cequiv.
+split. apply H. trivial. trivial. trivial. apply H. apply sym_bequiv. trivial.
+apply sym_cequiv. trivial. apply sym_cequiv. trivial. Qed.  
 
 Example congruence_example:
   cequiv
