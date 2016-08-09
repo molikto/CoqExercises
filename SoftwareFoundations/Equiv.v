@@ -1056,6 +1056,17 @@ Proof.
 (* FILL IN HERE *) Admitted.
 (** [] *)
 
+
+Theorem CWhileInf_congruence : forall b1 b1' c1 c1',
+  bequiv b1 b1' -> bequiv b1 BTrue ->
+  cequiv (WHILE b1 DO c1 END) (WHILE b1' DO c1' END).
+Proof. assert (forall b1 b1' c1 c1',
+  bequiv b1 b1' -> bequiv b1 BTrue ->
+  (forall st st', (WHILE b1 DO c1 END) / st \\ st' ->  (WHILE b1' DO c1' END) / st \\ st')).
+intros. eapply E_WhileLoop. unfold bequiv in H0. set (H0 st). unfold bequiv in H. set (H st).
+rewrite <- e0. rewrite e. simpl. trivial. 
+
+
 (** **** Exercise: 3 stars (fold_constants_com_sound)  *)
 (** Complete the [WHILE] case of the following proof. *)
 
@@ -1084,9 +1095,16 @@ Proof.
     + (* b always false *)
       apply trans_cequiv with c2; try assumption.
       apply IFB_false; assumption.
-  - (* WHILE *)
-    (* FILL IN HERE *) Admitted.
-(** [] *)
+  - assert (bequiv b (fold_constants_bexp b)).
+apply fold_constants_bexp_sound.
+destruct (fold_constants_bexp b).
+apply CWhile_congruence. trivial.
+
+try trivial;
+ try rewrite -> Heqb0;
+try (apply CWhile_congruence); try trivial.
+
+
 
 (* ########################################################## *)
 (** *** Soundness of (0 + n) Elimination, Redux *)
@@ -1170,7 +1188,7 @@ Fixpoint subst_aexp (i : id) (u : aexp) (a : aexp) : aexp :=
       AMinus (subst_aexp i u a1) (subst_aexp i u a2)
   | AMult a1 a2  =>
       AMult (subst_aexp i u a1) (subst_aexp i u a2)
-  end.
+  end. 
 
 Example subst_aexp_ex :
   subst_aexp X (APlus (ANum 42) (ANum 53))
