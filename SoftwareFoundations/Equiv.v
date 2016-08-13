@@ -1057,15 +1057,6 @@ Proof.
 (** [] *)
 
 
-Theorem CWhileInf_congruence : forall b1 b1' c1 c1',
-  bequiv b1 b1' -> bequiv b1 BTrue ->
-  cequiv (WHILE b1 DO c1 END) (WHILE b1' DO c1' END).
-Proof. assert (forall b1 b1' c1 c1',
-  bequiv b1 b1' -> bequiv b1 BTrue ->
-  (forall st st', (WHILE b1 DO c1 END) / st \\ st' ->  (WHILE b1' DO c1' END) / st \\ st')).
-intros. eapply E_WhileLoop. unfold bequiv in H0. set (H0 st). unfold bequiv in H. set (H st).
-rewrite <- e0. rewrite e. simpl. trivial. 
-
 
 (** **** Exercise: 3 stars (fold_constants_com_sound)  *)
 (** Complete the [WHILE] case of the following proof. *)
@@ -1098,12 +1089,28 @@ Proof.
   - assert (bequiv b (fold_constants_bexp b)).
 apply fold_constants_bexp_sound.
 destruct (fold_constants_bexp b).
-apply CWhile_congruence. trivial.
-
+unfold cequiv. intros. split. intros. 
+set (WHILE_true_nonterm b c st st' H). unfold not in n. apply n in H0.
+inversion H0. intros. unfold bequiv in H. set (H st). simpl in e.
+assert (bequiv BTrue BTrue). unfold bequiv. intros. simpl. trivial. 
+set (WHILE_true_nonterm BTrue SKIP st st' H1  H0). inversion f.
+unfold cequiv. intros. split. intros. inversion H0. subst. apply E_Skip. subst.
+unfold bequiv in H. set (H st). rewrite H3 in e. simpl in e. inversion e.
+intros. inversion H0. subst. apply E_WhileEnd. set (H st'). simpl in e.
+rewrite e. trivial. 
 try trivial;
  try rewrite -> Heqb0;
 try (apply CWhile_congruence); try trivial.
-
+try trivial;
+ try rewrite -> Heqb0;
+try (apply CWhile_congruence); try trivial.
+try trivial;
+ try rewrite -> Heqb0;
+try (apply CWhile_congruence); try trivial.
+try trivial;
+ try rewrite -> Heqb0;
+try (apply CWhile_congruence); try trivial.
+Qed.
 
 
 (* ########################################################## *)
