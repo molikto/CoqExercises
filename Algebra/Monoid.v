@@ -64,3 +64,9 @@ assert (comp y (comp (monoid_pow x a) (monoid_pow y a)) = comp (monoid_pow x a) 
 rewrite commutative. rewrite associtivity. replace (comp (monoid_pow y a) y) with (comp y (monoid_pow y a)).
 trivial. rewrite commutative. trivial. rewrite H. trivial. Qed.
 
+Class Group `(A: Set) := {
+ Group_Monoid :> Monoid A;
+ has_inverse: forall x: A, exists y: A, comp x y = unit
+}.
+
+
